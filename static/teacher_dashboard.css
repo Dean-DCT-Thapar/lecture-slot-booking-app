@@ -1,0 +1,118 @@
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.booking-list {
+    list-style: none;
+    padding: 0;
+    gap: 10px; /* Added gap between items */
+    display: flex; /* Ensure gap works by setting display to flex */
+    flex-direction: column; /* Stack items vertically */
+}
+.booking-item {
+    background: #f0f8ff;
+    padding: 15px;
+    border-radius: 6px;
+    border-left: 5px solid #007bff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.booking-item form {
+    margin: 0;
+}
+.booking-item button {
+    background-color: #dc3545;
+    border: none;
+    color: #fff;
+    padding: 8px 8px; /* Decreased width by reducing horizontal padding */
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.booking-item button:hover {
+    background-color: #c82333;
+}
+
+.dashboard-links {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 10px; /* Added gap between links */
+}
+
+.dashboard-links a {
+    display: inline-block;
+    margin: 10px 5px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+.dashboard-links a:hover {
+    background-color: #0056b3;
+}
+
+.booking-table{
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    }
+
+.booking-table th, .booking-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.booking-table th {
+    background-color: #007bff;
+    color: white;
+}
+
+.booking-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.booking-table tr:hover {
+    background-color: #ddd;
+}
+
+.booking-table form {
+    margin: 0;
+}
+.booking-table button {
+    background-color: #dc3545;
+    border: none;
+    color: #fff;
+    padding: 8px 8px; /* Decreased width by reducing horizontal padding */
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Add responsive wrapper styling for vertical scrolling */
+.table-responsive {
+    display: block;
+    width: 100%;
+    max-height: 400px; /* Adjust height as needed */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Optional: smooth scrolling on iOS */
+}
+
+p{
+    color: red;
+    font-size: 1.2em;
+    text-align: center;
+    margin-top: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: bold;
+}
+
+.scrollable-description {
+    max-width: 300px;      /* Adjust width as needed */
+    overflow-x: auto;      /* Enable horizontal scroll */
+    white-space: nowrap;   /* Prevent text wrapping */
+}

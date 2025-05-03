@@ -1,0 +1,45 @@
+.booking-table{
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    }
+
+.booking-table th, .booking-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.booking-table th {
+    background-color: #007bff;
+    color: white;
+}
+
+.booking-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.booking-table tr:hover {
+    background-color: #ddd;
+}
+
+.booking-table form {
+    margin: 0;
+}
+.booking-table button {
+    background-color: #dc3545;
+    border: none;
+    color: #fff;
+    padding: 8px 8px; /* Decreased width by reducing horizontal padding */
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.table-responsive {
+    display: block;
+    width: 100%;
+    max-height: 400px; /* Adjust the height as needed */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+}

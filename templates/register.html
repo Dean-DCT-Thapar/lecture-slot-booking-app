@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Register</h1>
+        <form id="registerForm" action="/register" method="post">
+            <input type="text" id="username" name="username" placeholder="username" required>
+            <input type="email" id="email" name="email" placeholder="email" required>
+            <input type="password" id="password" name="password" placeholder="password" required>
+            <button type="submit">Register</button>
+            <a href="{{ url_for('login') }}">Login</a>
+            <br><br>
+        </form>
+        {% if message %}
+            <p style="color: red;">{{ message }}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const confirmation = confirm(`Are you sure you want to register with the username: "${username}" and email: "${email}"?`);
+            if (!confirmation) {
+                event.preventDefault(); // Prevent form submission if the user cancels
+            }
+        });
+    </script>
+</body>
+</html>

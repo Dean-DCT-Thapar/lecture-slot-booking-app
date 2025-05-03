@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='teacher_dashboard.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div class="welcome">Welcome, {{ current_user.username }}</div>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <div class="dashboard-header">
+            <h2>Your Bookings</h2>
+        </div>
+        {% if bookings %}
+        <div class="table-responsive">
+            <table class="booking-table sortable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Description</th>
+                        <th class="sorttable_nosort">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.slot.slot_date.strftime('%B %d, %Y') }}</td>
+                        <td>{{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}</td>
+                        <td>
+                            <div class="scrollable-description">
+                                {{ booking.description }}
+                            </div>
+                        </td>
+                        <td>
+                            <form action="{{ url_for('delete_booking', booking_id=booking.id) }}" method="post" 
+                                  onsubmit="return confirm('Are you sure you want to cancel your booking for \n{{ booking.slot.slot_date }}: {{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}?');">
+                                <button type="submit">Cancel</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>You have no bookings</p>
+        {% endif %}
+        <div class="dashboard-links">
+            <a href="{{ url_for('teacher_slots') }}">Book a New Slot</a>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='sorttable.js') }}"></script>
+</body>
+</html>

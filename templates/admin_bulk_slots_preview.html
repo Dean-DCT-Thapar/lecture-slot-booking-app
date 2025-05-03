@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preview Bulk Slots</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+    <style>
+        .preview-container {
+            max-width: 700px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .preview-container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            text-align: center;
+            padding: 8px;
+        }
+        th {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .back-link, .confirm-btn {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .confirm-btn button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            border: none;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .confirm-btn button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <div class="preview-container">
+         <h1>Preview Bulk Slots</h1>
+         {% if candidate_slots %}
+             <table>
+                 <thead>
+                     <tr>
+                         <th>Date</th>
+                         <th>Day</th>
+                         <th>Slots</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                     {% for candidate in candidate_slots %}
+                     <tr>
+                         <td>{{ candidate.date }}</td>
+                         <td>{{ candidate.date | dayfromdate }}</td>
+                         <td>
+                             {% for slot in candidate.slots %}
+                                 {{ slot.start }} - {{ slot.end }}<br>
+                             {% endfor %}
+                         </td>
+                     </tr>
+                     {% endfor %}
+                 </tbody>
+             </table>
+         {% else %}
+             <p>No candidate slots found. Please adjust your inputs.</p>
+         {% endif %}
+         <form method="POST" action="{{ url_for('confirm_bulk_slots') }}">
+             <!-- Pass along the parameters as hidden fields -->
+             <input type="hidden" name="start_date" value="{{ start_date }}">
+             <input type="hidden" name="end_date" value="{{ end_date }}">
+             <input type="hidden" name="start_time" value="{{ start_time }}">
+             <input type="hidden" name="end_time" value="{{ end_time }}">
+             <input type="hidden" name="duration" value="{{ duration }}">
+             {% for day in excluded %}
+                 <input type="hidden" name="excluded[]" value="{{ day }}">
+             {% endfor %}
+             <div class="confirm-btn">
+                 <button type="submit">Confirm and Create Slots</button>
+             </div>
+         </form>
+         <div class="back-link">
+             <a href="{{ url_for('create_bulk_slots') }}">Back to Edit</a>
+         </div>
+    </div>
+</div>
+</body>
+</html>

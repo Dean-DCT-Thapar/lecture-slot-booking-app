@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Confirmation</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='booking_confirmation.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Booking Confirmation</h1>
+        <p> 
+            <strong>Slot Date:</strong> {{ slot.slot_date.strftime('%B %d, %Y') }} <br>
+            <strong>Slot Timings:</strong>  {{ slot.slot_start_time }} - {{ slot.slot_end_time }}
+        </p>
+        <div class="description-container">
+            <p>
+            Description: {{ description }}
+            </p>
+        </div>
+        <p>
+            Your booking has been confirmed.
+        </p>
+        <br>
+        <a href="{{ url_for('teacher_dashboard') }}">Back to Dashboard</a>
+    </div>
+</body>
+</html>

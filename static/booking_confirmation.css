@@ -1,0 +1,48 @@
+/* Container styling for the confirmation page */
+.container {
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    margin: 50px auto;
+    text-align: center;
+}
+
+/* Header styling */
+.container h1 {
+    color: #3c763d;
+    margin-bottom: 20px;
+}
+
+/* Paragraph styling */
+.container p {
+    font-size: 1.1em;
+    line-height: 1.5;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Highlight the slot details */
+.container p:first-of-type {
+    background-color: #dff0d8;
+    border: 1px solid #3c763d;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+/* Link styling for back button */
+.container a {
+    display: inline-block;
+    margin-top: 20px;
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.container a:hover {
+    background-color: #0056b3;
+}

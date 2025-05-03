@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Slot Availability</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- You can create or reuse an admin CSS file --> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_slots.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <h1>Change Availability of Slots</h1>
+        <!-- Search Form -->
+        <form method="GET" action="{{ url_for('admin_slots') }}" style="margin-bottom:20px;">
+            <label for="search_date">Search by Date:</label>
+            <input type="date" id="search_date" name="search_date" value="{{ search_date }}">
+            <button type="submit">Search</button>
+        </form>
+        {% if search_date %}
+            <p style="display: inline;">Showing slots for date: <strong>{{ search_date }}</strong> | </p>
+            <a class="normal-link" href="/admin/slots">Show All Slots Instead</a>
+        {% endif %}
+        {% if slots %}
+            <table class="table-responsive sortable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in slots %}
+                    <tr>
+                        <td>{{ slot.slot_date.strftime('%B %d, %Y') }}</td>
+                        <td>{{ slot.slot_start_time }}</td>
+                        <td>{{ slot.slot_end_time }}</td>
+                        <td>
+                            {% if slot.available %}
+                                Available
+                            {% else %}
+                                Unavailable
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form class="availability-form" action="{{ url_for('set_slot_availability', slot_id=slot.id) }}" method="post">
+                                {% if slot.available %}
+                                    <input type="hidden" name="available" value="false">
+                                    <button type="submit" style="background-color: #dc3545; color: white;">Disable</button>
+                                {% else %}
+                                    <input type="hidden" name="available" value="true">
+                                    <button type="submit" style="background-color: #28a745; color: white;">Enable</button>
+                                {% endif %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No slots found.</p>
+        {% endif %}
+        
+        <br>
+    </div>
+    <script src="{{ url_for('static', filename='sorttable.js') }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('.availability-form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent full page refresh
+
+                const formData = new FormData(form);
+                const actionUrl = form.getAttribute('action');
+
+                fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const button = form.querySelector('button');
+                        // Toggle button text and style based on new availability status.
+                        if (data.available) {
+                            // Now available; display “Disable” option next.
+                            button.textContent = 'Disable';
+                            button.style.backgroundColor = '#dc3545';
+                            // Set hidden field for next update
+                            form.querySelector('input[name="available"]').value = 'false';
+                        } else {
+                            // Now unavailable; display “Enable” option next.
+                            button.textContent = 'Enable';
+                            button.style.backgroundColor = '#28a745';
+                            // Set hidden field for next update
+                            form.querySelector('input[name="available"]').value = 'true';
+                        }
+                    } else {
+                        alert('Error updating availability: ' + (data.error || 'Unknown error.'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating availability.');
+                });
+            });
+        });
+    });
+    </script>
+</body>
+</html>

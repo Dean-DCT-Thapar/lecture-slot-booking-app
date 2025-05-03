@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Slots</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<style>
+    .container {
+    background: #fff;
+    max-width: 400px;
+    max-height: 400px;
+    margin: 100px auto;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1{
+        text-align: center;
+        margin-top: 60px;
+    }
+</style>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <div class="form-container">
+            <h1>Create Slots</h1>
+            <a style="margin-bottom: 20px; margin-left: 40px;" href="{{url_for('create_bulk_slots')}}" class="button">Create Slots</a>
+            <a href="{{url_for('delete_slots')}}" class="button">Delete Slots</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Bulk Slots</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_create_bulk_slots.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <div class="form-container">
+            <h1>Create Bulk Slots</h1>
+            <form id="bulkSlotsForm" method="POST" action="{{ url_for('create_bulk_slots') }}">
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" required>
+                
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date" required>
+                
+                <label for="start_time">Start Time:</label>
+                <input type="time" id="start_time" name="start_time" required>
+                
+                <label for="end_time">End Time:</label>
+                <input type="time" id="end_time" name="end_time" required>
+                
+                <label for="duration">Slot Duration (minutes):</label>
+                <input type="number" id="duration" name="duration" min="1" required>
+                
+                <div class="checkboxes">
+                    <label>Exclude Days:</label>
+                    <input type="checkbox" id="saturday" name="exclude_days" value="saturday">
+                    <label for="saturday">Saturday</label>
+                    <input type="checkbox" id="sunday" name="exclude_days" value="sunday">
+                    <label for="sunday">Sunday</label>
+                    <!-- Add more checkboxes as needed -->
+                </div>
+                
+                <button type="submit">Preview Slots</button>
+            </form>
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        // Set min attribute for date inputs to today's date
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById('start_date').setAttribute('min', today);
+        document.getElementById('end_date').setAttribute('min', today);
+
+        document.getElementById('bulkSlotsForm').addEventListener('submit', function(e) {
+            const startDateInput = document.getElementById('start_date').value;
+            const endDateInput = document.getElementById('end_date').value;
+            const todayDate = today; // in yyyy-mm-dd format
+
+            if(startDateInput < todayDate) {
+                alert("Start date cannot be in the past.");
+                e.preventDefault();
+                return false;
+            }
+            if(endDateInput < startDateInput) {
+                alert("End date cannot be before the start date.");
+                e.preventDefault();
+                return false;
+            }
+            // Optionally add further validations as needed
+            return true;
+        });
+    </script>
+</body>
+</html>

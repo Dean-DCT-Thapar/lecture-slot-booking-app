@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div class="welcome">Welcome, {{ current_user.username }}</div>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+        <h2>All Bookings</h2>
+        {% if bookings %}
+            <div class="table-responsive">
+                <table class="booking-table sortable">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th class="sorttable_nosort">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>{{ booking.user.username }}</td>
+                            <td>{{ booking.slot.slot_date }}</td>
+                            <td>{{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}</td>
+                            <td>
+                                <form action="{{ url_for('delete_booking', booking_id=booking.id) }}" method="post">
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No bookings found.</p>
+        {% endif %}
+        <br><br>
+        <a href="{{url_for('admin_slots')}}">Modify Availability of Slots</a>
+        <a href="{{url_for('create_slot')}}">Create/Delete Slots</a>
+    </div>
+    <script src="{{ url_for('static', filename='sorttable.js') }}"></script>
+</body>
+</html>

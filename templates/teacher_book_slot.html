@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Slot Details</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='book_slot.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Book Slot</h1>
+        <form method="POST" action="{{ url_for('book_slot', slot_id=slot.id) }}">
+            <div class="slot-details">
+                <p> 
+                    <strong>Slot Date:</strong> {{ slot.slot_date.strftime('%B %d, %Y') }} <br>
+                    <strong>Slot Timings:</strong> {{ slot.slot_start_time }} - {{ slot.slot_end_time }}
+                </p>
+            </div>
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="4" cols="50"></textarea>
+            <br>
+            <button type="submit">OK</button>
+        </form>
+        <br>
+        <a href="{{ url_for('teacher_slots') }}">Back to Slots</a>
+    </div>
+</body>
+</html>
