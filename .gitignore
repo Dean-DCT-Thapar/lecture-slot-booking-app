@@ -19,3 +19,5 @@ instance/
 # IDE files
 .vscode/
 .idea/
+
+google_credentials.json
