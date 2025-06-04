@@ -17,7 +17,9 @@
                 <table class="booking-table sortable">
                     <thead>
                         <tr>
-                            <th>User</th>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Email</th>
                             <th>Date</th>
                             <th>Time</th>
                             <th class="sorttable_nosort">Action</th>
@@ -27,6 +29,8 @@
                         {% for booking in bookings %}
                         <tr>
                             <td>{{ booking.user.username }}</td>
+                            <td>{{ booking.user.first_name + booking.user.last_name }}</td>
+                            <td>{{ booking.user.email }}</td>
                             <td>{{ booking.slot.slot_date }}</td>
                             <td>{{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}</td>
                             <td>

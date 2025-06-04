@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from application.models import db, User, Slot, Booking  # include Booking
+from application.models import db, User, Slot, Booking
 from datetime import datetime, timedelta
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
+from datetime import date
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
@@ -44,12 +44,27 @@ def delete_old_slots_job():
         db.session.commit()
         print(f"Deleted {len(old_slots)} old slot(s) before {today}.")
 
-# Set up the scheduler to run the deletion job every day at midnight
+# Set up the scheduler to run the deletion job every day at midnight.
+scheduler = BackgroundScheduler()
+if not scheduler.running:
+    with app.app_context():
+        today = datetime.today().date()
+        old_slots_exist = Slot.query.filter(Slot.slot_date < today).count() > 0
+        if old_slots_exist:
+            scheduler.add_job(func=delete_old_slots_job, trigger="cron", hour=0, minute=0)
+            scheduler.start()
+# and avoids potential issues caused by stale data.
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=delete_old_slots_job, trigger="cron", hour=0, minute=0)
 scheduler.start()
 
-# Shut down the scheduler when exiting the app
+atexit.register(lambda: safe_shutdown_scheduler())
+
+def safe_shutdown_scheduler():
+    try:
+        scheduler.shutdown()
+    except Exception as e:
+        print(f"Error during scheduler shutdown: {e}")
 atexit.register(lambda: scheduler.shutdown())
 
 @app.route('/')
@@ -61,8 +76,11 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        email = request.form.get('email')
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
         if username and password:
-            new_user = User(username=username, password=password, role="teacher")
+            new_user = User(username=username, password=password, email = email, first_name = first_name, last_name = last_name, role="teacher")
             # Check if the username already exists
             existing_user = User.query.filter_by(username=username).first()
             if existing_user:
@@ -84,6 +102,7 @@ def login():
         if user and user.password == request.form['password']:
             login_user(user)
             if user.role == 'admin':
+                delete_old_slots_job()
                 return redirect(url_for('admin_dashboard'))
             return redirect(url_for('teacher_dashboard'))
         message = 'Invalid username or password'
@@ -95,21 +114,38 @@ def login():
 @login_required
 def teacher_slots():
     selected_date = request.args.get('date')
+    today = date.today()
+    # Show all days in the current year
+    first_day = today.replace(month=1, day=1)
+    last_day = today.replace(month=12, day=31)
+    calendar_days = [first_day + timedelta(days=i) for i in range((last_day - first_day).days + 1)]
+
+    # Find all dates with available slots
+    slots_all = Slot.query.filter(Slot.available == True, ~Slot.bookings.any()).all()
+    available_dates = {slot.slot_date.strftime('%Y-%m-%d') for slot in slots_all}
+
     slots = []
     if selected_date:
         date_obj = datetime.strptime(selected_date, '%Y-%m-%d').date()
-        # Only list slots for the given date that are marked available and not already booked
-        slots = Slot.query.filter(
-            Slot.slot_date == date_obj,
-            Slot.available == True,
-            ~Slot.bookings.any()  # Ensure the slot is not already booked
-        ).all()
-    return render_template('teacher_slots.html', slots=slots, selected_date=selected_date)
+        slots = [slot for slot in slots_all if slot.slot_date == date_obj]
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and selected_date:
+        return render_template('slots_table.html', slots=slots, selected_date=selected_date)
+
+    return render_template(
+        'teacher_slots.html',
+        calendar_days=calendar_days,
+        available_dates=available_dates,
+        selected_date=selected_date,
+        slots=slots
+    )
 
 # Updated teacher dashboard to show the teacher's bookings
 @app.route('/teacher')
 @login_required
 def teacher_dashboard():
+    if current_user.role != "teacher":
+        return redirect(url_for('login'))
     bookings = Booking.query.filter_by(user_id=current_user.id).all()
     return render_template('teacher_dashboard.html', bookings=bookings)
 
@@ -164,6 +200,8 @@ def set_slot_availability(slot_id):
 @app.route('/admin')
 @login_required
 def admin_dashboard():
+    if current_user.role != 'admin':
+        return redirect(url_for('login'))
     bookings = Booking.query.all()
     return render_template('admin_dashboard.html', bookings=bookings)
 
@@ -173,8 +211,15 @@ def book_slot(slot_id):
     slot = Slot.query.get_or_404(slot_id)
     existing_booking = Booking.query.filter_by(slot_id=slot.id).first()
     if not existing_booking and slot.available:
-        event_id = add_event_to_calendar(slot)
+        usersearch = User.query.filter_by(id=current_user.id).first()
         description = request.form.get('description', 'None')
+        metadata = {
+            "username" : usersearch.username,
+            "email" : usersearch.email,
+            "full_name": f"{usersearch.first_name} {usersearch.last_name}",
+            "description": description
+        }
+        event_id = add_event_to_calendar(slot,metadata)
         new_booking = Booking(user_id=current_user.id, slot_id=slot.id, event_id=event_id, description=description)
         db.session.add(new_booking)
         db.session.commit()
@@ -196,13 +241,22 @@ def confirm_slot(slot_id):
 @login_required
 def delete_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
-    if booking.user_id == current_user.id:
+    try:
         remove_event_from_calendar(booking.event_id)
+    except Exception as e:
+        print(f"Error removing event from Google Calendar: {e}")
+    try:
         db.session.delete(booking)
         db.session.commit()
         print('Booking deleted and event removed from Google Calendar!')
-    else:
-        print('Permission denied!')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting booking: {e}")
+        flash('An error occurred while deleting the booking.')
+    
+    if current_user.role == 'admin':
+        return redirect(url_for('admin_dashboard'))
+    
     return redirect(url_for('teacher_dashboard'))
 
 @app.route('/logout')
@@ -254,7 +308,7 @@ def create_bulk_slots():
         except (ValueError, TypeError):
             flash('Invalid duration!')
             return redirect(url_for('create_bulk_slots'))
-        excluded = request.form.getlist('exclude_days')  # e.g., ['saturday', 'sunday']
+        excluded = request.form.getlist('exclude_days')
 
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -269,7 +323,7 @@ def create_bulk_slots():
         candidate_dates = []
         current_date = start_date
         while current_date <= end_date:
-            day_name = current_date.strftime('%A').lower()  # e.g., "monday"
+            day_name = current_date.strftime('%A').lower()
             if day_name not in excluded:
                 candidate_dates.append(current_date)
             current_date += timedelta(days=1)
@@ -324,7 +378,7 @@ def confirm_bulk_slots():
     except (ValueError, TypeError):
         flash('Invalid duration!')
         return redirect(url_for('create_bulk_slots'))
-    excluded = request.form.getlist('excluded[]')  # Hidden input for excluded days
+    excluded = request.form.getlist('excluded[]')
 
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -374,11 +428,11 @@ def confirm_bulk_slots():
 #                    Google Calendar API integration                    #
 #########################################################################
 
-def add_event_to_calendar(slot):
+def add_event_to_calendar(slot,metadata):
     SCOPES = ['https://www.googleapis.com/auth/calendar']
     print("Loading service account credentials...")
     credentials = service_account.Credentials.from_service_account_file(
-        'google_credentials.json', scopes=SCOPES)
+        'credentials.json', scopes=SCOPES)
     print("Credentials loaded successfully. Building the Google Calendar service...")
     service = build('calendar', 'v3', credentials=credentials)
 
@@ -387,14 +441,14 @@ def add_event_to_calendar(slot):
     print(f"Creating an event from {start_dt.isoformat()} to {end_dt.isoformat()}")
 
     event = {
-        'summary': f'Lecture Recording: {slot.slot_date}',
+        'summary': f'Name-{metadata["full_name"]}, Email-{metadata["email"]}, Description-{metadata["description"]}',  
         'start': {'dateTime': start_dt.isoformat(), 'timeZone': 'Asia/Kolkata'},
         'end': {'dateTime': end_dt.isoformat(), 'timeZone': 'Asia/Kolkata'},
     }
     print("Event details:", event)
 
     try:
-        created_event = service.events().insert(calendarId='16d7113cfeb8be20173045a8dd418905d7e91da5f00f7238e95b5a8f4f25217c@group.calendar.google.com', body=event).execute()
+        created_event = service.events().insert(calendarId='36b6b142b66921e3359c57c8134b2bdaf3e274e3cd5d6752677b6f8321bbaf70@group.calendar.google.com', body=event).execute()
         print("Google Calendar API response:", created_event)
         if created_event:
             print('Event successfully added to Google Calendar!')
@@ -408,11 +462,11 @@ def add_event_to_calendar(slot):
 def remove_event_from_calendar(event_id):
     SCOPES = ['https://www.googleapis.com/auth/calendar']
     credentials = service_account.Credentials.from_service_account_file(
-        'google_credentials.json', scopes=SCOPES)
+        'credentials.json', scopes=SCOPES)
     service = build('calendar', 'v3', credentials=credentials)
 
     try:
-        service.events().delete(calendarId='16d7113cfeb8be20173045a8dd418905d7e91da5f00f7238e95b5a8f4f25217c@group.calendar.google.com', eventId=event_id).execute()
+        service.events().delete(calendarId='36b6b142b66921e3359c57c8134b2bdaf3e274e3cd5d6752677b6f8321bbaf70@group.calendar.google.com', eventId=event_id).execute()
         print('Event successfully removed from Google Calendar!')
     except Exception as e:
         print("Error occurred while removing event:", e)

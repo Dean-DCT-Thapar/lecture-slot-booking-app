@@ -70,3 +70,13 @@ form a:hover {
     text-align: center;
     font-weight: bold;
 }
+
+.name-row {
+    display: flex;
+    gap: 5px;
+    width: 100%;
+}
+.name-row input {
+    flex: 1;
+    width: 100%;
+}

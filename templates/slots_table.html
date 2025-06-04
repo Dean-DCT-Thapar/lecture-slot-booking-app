@@ -1,0 +1,30 @@
+{% if slots %}
+    {% set months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
+    {% set year = selected_date.split('-')[0] %}
+    {% set month = months[selected_date.split('-')[1]|int - 1] %}
+    {% set day = selected_date.split('-')[2]|int %}
+    <h2>Slots for {{ month }} {{ day }}, {{ year }}</h2>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='teacher_slots.css') }}">
+    <div class="table-responsive">
+        <table class="table slot-table sortable">
+            <thead>
+                <tr>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th class="sorttable_nosort">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in slots %}
+                <tr>
+                    <td>{{ slot.slot_start_time }}</td>
+                    <td>{{ slot.slot_end_time }}</td>
+                    <td><a href="{{ url_for('confirm_slot', slot_id=slot.id) }}">Book this slot</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p>No available slots for this date.</p>
+{% endif %}
