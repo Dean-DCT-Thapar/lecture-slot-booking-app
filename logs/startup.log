@@ -4,3 +4,16 @@
 2025-08-09 00:19:45,205 INFO: Admin user already exists
 2025-08-09 00:19:45,206 INFO: Application setup completed successfully!
 2025-08-09 00:19:45,206 INFO: Application is ready to start
+2025-08-09 00:27:43,548 INFO: Starting EduTube Slot Booking Application setup...
+2025-08-09 00:27:43,549 INFO: No migrations found, creating tables directly
+2025-08-09 00:27:43,589 INFO: Database tables created successfully
+2025-08-09 00:27:43,613 INFO: Default admin user created (username: admin, password: admin123)
+2025-08-09 00:27:43,618 WARNING: SECURITY: Please change the default admin password after first login!
+2025-08-09 00:27:43,619 INFO: Application setup completed successfully!
+2025-08-09 00:27:43,619 INFO: Application is ready to start
+2025-08-09 00:35:28,730 INFO: Starting EduTube Slot Booking Application setup...
+2025-08-09 00:35:28,731 INFO: No migrations found, creating tables directly
+2025-08-09 00:35:28,742 INFO: Database tables created successfully
+2025-08-09 00:35:28,758 INFO: Admin user already exists
+2025-08-09 00:35:28,758 INFO: Application setup completed successfully!
+2025-08-09 00:35:28,758 INFO: Application is ready to start

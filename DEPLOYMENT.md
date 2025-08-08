@@ -130,13 +130,6 @@ ADMIN_EMAIL=your-admin@domain.com
 4. Notify users if needed
 5. Document incident
 
-## 📞 Support Contacts
-
-- **Technical Lead**: [Contact Info]
-- **Database Admin**: [Contact Info]  
-- **Security Team**: [Contact Info]
-- **Hosting Provider**: [Render Support]
-
 ---
 
 **Last Updated**: {{ date }}
