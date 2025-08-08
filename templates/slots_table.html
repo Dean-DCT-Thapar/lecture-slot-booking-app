@@ -3,28 +3,179 @@
     {% set year = selected_date.split('-')[0] %}
     {% set month = months[selected_date.split('-')[1]|int - 1] %}
     {% set day = selected_date.split('-')[2]|int %}
-    <h2>Slots for {{ month }} {{ day }}, {{ year }}</h2>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='teacher_slots.css') }}">
-    <div class="table-responsive">
-        <table class="table slot-table sortable">
+    
+    <style>
+        .slots-content-inner {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--primary-100);
+            margin: 0;
+        }
+        
+        .slots-header-inner {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem 0;
+        }
+        
+        .slots-date-title {
+            font-size: 1.6rem;
+            background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .slots-date-subtitle {
+            color: var(--primary-600);
+            font-size: 0.95rem;
+        }
+        
+        .slots-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        
+        .slots-table th {
+            background: linear-gradient(135deg, var(--success-500), var(--success-600));
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .slots-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--primary-100);
+            color: var(--primary-700);
+            font-weight: 500;
+        }
+        
+        .slots-table tr:nth-child(even) {
+            background-color: var(--primary-50);
+        }
+        
+        .slots-table tr:hover {
+            background-color: var(--success-50);
+            transition: all 0.2s ease;
+        }
+        
+        .time-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: var(--primary-800);
+        }
+        
+        .book-slot-btn {
+            background: linear-gradient(135deg, var(--success-500), var(--success-600));
+            color: white;
+            padding: 0.7rem 1.3rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .book-slot-btn:hover {
+            background: linear-gradient(135deg, var(--success-600), var(--success-700));
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .slots-table th,
+            .slots-table td {
+                padding: 0.7rem 0.4rem;
+                font-size: 0.85rem;
+            }
+            
+            .book-slot-btn {
+                padding: 0.5rem 0.9rem;
+                font-size: 0.75rem;
+            }
+            
+            .slots-date-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+    
+    <div class="slots-header-inner">
+        <h3 class="slots-date-title">📅 {{ month }} {{ day }}, {{ year }}</h3>
+        <p class="slots-date-subtitle">Available appointment slots for this date</p>
+    </div>
+    
+    <div class="slots-content-inner">
+        <table class="slots-table">
             <thead>
                 <tr>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th class="sorttable_nosort">Action</th>
+                    <th>🕐 Start Time</th>
+                    <th>🕕 End Time</th>
+                    <th>⚡ Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for slot in slots %}
                 <tr>
-                    <td>{{ slot.slot_start_time }}</td>
-                    <td>{{ slot.slot_end_time }}</td>
-                    <td><a href="{{ url_for('confirm_slot', slot_id=slot.id) }}">Book this slot</a></td>
+                    <td class="time-cell">{{ slot.slot_start_time }}</td>
+                    <td class="time-cell">{{ slot.slot_end_time }}</td>
+                    <td>
+                        <a href="{{ url_for('confirm_slot', slot_id=slot.id) }}" class="book-slot-btn">
+                            📝 Book this slot
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 {% else %}
-    <p>No available slots for this date.</p>
+    <style>
+        .no-slots-section {
+            text-align: center;
+            padding: 2rem;
+            color: var(--primary-600);
+            background: var(--primary-50);
+            border-radius: 12px;
+            border: 1px solid var(--primary-200);
+        }
+        
+        .no-slots-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .no-slots-title {
+            font-size: 1.3rem;
+            color: var(--primary-800);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .no-slots-subtitle {
+            color: var(--primary-600);
+            font-size: 1rem;
+        }
+    </style>
+    
+    <div class="no-slots-section">
+        <span class="no-slots-icon">📅</span>
+        <p class="no-slots-title">No Available Slots</p>
+        <p class="no-slots-subtitle">There are no available slots for this date. Please try another date.</p>
+    </div>
 {% endif %}

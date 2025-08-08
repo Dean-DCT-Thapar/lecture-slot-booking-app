@@ -1,27 +1,295 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Slot Details</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='book_slot.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='teacher_dashboard.css') }}">
+    <style>
+        .booking-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0;
+        }
+        
+        .booking-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .booking-title {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--success-600), var(--success-800));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .booking-subtitle {
+            color: var(--primary-600);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+        
+        .booking-form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            border: 1px solid var(--primary-100);
+            position: relative;
+        }
+        
+        .booking-form-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--success-500), var(--success-600));
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .slot-details {
+            background: var(--success-50);
+            border: 2px solid var(--success-200);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .slot-details::before {
+            content: '📅';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--success-500);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .slot-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .slot-detail-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .slot-detail-icon {
+            background: var(--success-500);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .slot-detail-content {
+            flex: 1;
+        }
+        
+        .slot-detail-label {
+            font-weight: 600;
+            color: var(--success-700);
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+        
+        .slot-detail-value {
+            color: var(--primary-800);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        .form-group {
+            margin-bottom: 2rem;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-700);
+            margin-bottom: 0.8rem;
+            display: block;
+            font-size: 1rem;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--primary-200);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: var(--primary-50);
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .form-textarea:focus {
+            border-color: var(--success-500);
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+            background: white;
+            outline: none;
+        }
+        
+        .form-textarea::placeholder {
+            color: var(--primary-400);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .book-button {
+            background: linear-gradient(135deg, var(--success-500), var(--success-600));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .book-button:hover {
+            background: linear-gradient(135deg, var(--success-600), var(--success-700));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        }
+        
+        .back-button {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        
+        .back-button:hover {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 85, 104, 0.25);
+        }
+        
+        @media (max-width: 768px) {
+            .booking-form-container {
+                padding: 2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .slot-details {
+                padding: 1.5rem;
+            }
+            
+            .booking-container {
+                margin: 1rem auto;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Book Slot</h1>
-        <form method="POST" action="{{ url_for('book_slot', slot_id=slot.id) }}">
-            <div class="slot-details">
-                <p> 
-                    <strong>Slot Date:</strong> {{ slot.slot_date.strftime('%B %d, %Y') }} <br>
-                    <strong>Slot Timings:</strong> {{ slot.slot_start_time }} - {{ slot.slot_end_time }}
-                </p>
+        <div class="modern-navbar">
+            <div class="nav-brand">
+                <div class="logo-icon">📝</div>
+                <span class="brand-text">Book Slot</span>
             </div>
-            <label for="description">Description:</label>
-            <textarea id="description" name="description" rows="4" cols="50"></textarea>
-            <br>
-            <button type="submit">OK</button>
-        </form>
-        <br>
-        <a href="{{ url_for('teacher_slots') }}">Back to Slots</a>
+            <div class="nav-links">
+                <a href="{{ url_for('teacher_dashboard') }}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link logout">
+                    <span class="nav-icon">🚪</span>
+                    Logout
+                </a>
+            </div>
+        </div>
+        
+        <div class="booking-container">
+            <div class="booking-header">
+                <h1 class="booking-title">Book Your Slot</h1>
+                <p class="booking-subtitle">Confirm your appointment details</p>
+            </div>
+            
+            <div class="booking-form-container">
+                <div class="slot-details">
+                    <div class="slot-detail-item">
+                        <div class="slot-detail-icon">📅</div>
+                        <div class="slot-detail-content">
+                            <div class="slot-detail-label">Appointment Date</div>
+                            <div class="slot-detail-value">{{ slot.slot_date.strftime('%B %d, %Y') }}</div>
+                        </div>
+                    </div>
+                    <div class="slot-detail-item">
+                        <div class="slot-detail-icon">⏰</div>
+                        <div class="slot-detail-content">
+                            <div class="slot-detail-label">Time Slot</div>
+                            <div class="slot-detail-value">{{ slot.slot_start_time }} - {{ slot.slot_end_time }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('book_slot', slot_id=slot.id) }}">
+                    <div class="form-group">
+                        <label for="description" class="form-label">📝 Description <span style="color: red;">*</span></label>
+                        <textarea 
+                            id="description" 
+                            name="description" 
+                            class="form-textarea"
+                            placeholder="Add details about your appointment..."
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button type="submit" class="book-button">
+                            ✅ Confirm Booking
+                        </button>
+                        <a href="{{ url_for('teacher_slots') }}" class="back-button">
+                            ← Back to Slots
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </body>
 </html>

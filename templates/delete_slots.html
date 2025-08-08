@@ -1,75 +1,612 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delete Slots</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='delete_slots.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+    <style>
+        .delete-slots-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0;
+        }
+        
+        .delete-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .delete-title {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-600), var(--accent-800));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .delete-subtitle {
+            color: var(--primary-600);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+        
+        .search-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--primary-100);
+            position: relative;
+        }
+        
+        .search-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-500), var(--primary-600));
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        .search-group {
+            flex: 1;
+        }
+        
+        .search-label {
+            font-weight: 600;
+            color: var(--primary-700);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-size: 0.95rem;
+        }
+        
+        .search-input {
+            padding: 1rem;
+            border: 2px solid var(--primary-200);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--primary-50);
+            width: 100%;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
+            background: white;
+        }
+        
+        .search-button {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .search-button:hover {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 85, 104, 0.25);
+        }
+        
+        .search-info {
+            background: var(--primary-50);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 4px solid var(--primary-500);
+        }
+        
+        .search-date-display {
+            font-weight: 600;
+            color: var(--primary-700);
+        }
+        
+        .show-all-link {
+            color: var(--primary-600);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .show-all-link:hover {
+            background: var(--primary-100);
+            color: var(--primary-700);
+        }
+        
+        .slots-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--primary-100);
+            position: relative;
+        }
+        
+        .slots-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-500), var(--accent-600));
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .slots-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        .slots-table th {
+            background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
+            color: white;
+            padding: 1.2rem 1rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .slots-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--primary-100);
+            color: var(--primary-700);
+        }
+        
+        .slots-table tr:nth-child(even) {
+            background-color: var(--primary-50);
+        }
+        
+        .slots-table tr:hover {
+            background-color: var(--accent-50);
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+        
+        .availability-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .availability-available {
+            background: var(--success-100);
+            color: var(--success-700);
+        }
+        
+        .availability-unavailable {
+            background: var(--accent-100);
+            color: var(--accent-700);
+        }
+        
+        .delete-button {
+            background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .delete-button:hover {
+            background: linear-gradient(135deg, var(--accent-600), var(--accent-700));
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        }
+        
+        .bulk-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--primary-50);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-500);
+        }
+        
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .select-all-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-500);
+        }
+        
+        .select-all-label {
+            font-weight: 600;
+            color: var(--primary-700);
+            cursor: pointer;
+        }
+        
+        .bulk-delete-button {
+            background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .bulk-delete-button:hover {
+            background: linear-gradient(135deg, var(--accent-600), var(--accent-700));
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+        }
+        
+        .bulk-delete-button:disabled {
+            background: var(--primary-300);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .slot-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-500);
+        }
+        
+        .no-slots-message {
+            text-align: center;
+            padding: 3rem;
+            color: var(--primary-600);
+            font-size: 1.1rem;
+        }
+        
+        .no-slots-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .back-button {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-button:hover {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 85, 104, 0.25);
+        }
+        
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .search-info {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .bulk-actions {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .slots-table th,
+            .slots-table td {
+                padding: 0.8rem 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .slots-table th:first-child,
+            .slots-table td:first-child {
+                padding: 0.8rem 0.3rem;
+            }
+            
+            .delete-slots-container {
+                margin: 1rem auto;
+            }
+            
+            .search-section,
+            .slots-section {
+                padding: 1.5rem;
+            }
+            
+            .bulk-delete-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <div class="navbar">
-            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
+        <div class="modern-navbar">
+            <div class="nav-brand">
+                <div class="logo-icon">🗑️</div>
+                <span class="brand-text">Delete Slots</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link logout">
+                    <span class="nav-icon">🚪</span>
+                    Logout
+                </a>
+            </div>
         </div>
-        <h1>Delete Slots</h1>
-        <form method="GET" action="{{ url_for('delete_slots') }}" style="margin-bottom:20px;">
-            <label for="search_date">Search by Date:</label>
-            <input type="date" id="search_date" name="search_date" value="{{ search_date }}">
-            <button type="submit">Search</button>
-        </form>
-        {% if search_date %}
-            <p style="display: inline;">Showing slots for date: <strong>{{ search_date }}</strong> | </p>
-            <a class="normal-link" href="/admin/slots">Show All Slots Instead</a>
-        {% endif %}
-        {% if slots %}
-        <table class="table-responsive sortable">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Availability</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for slot in slots %}
-                <tr id="slot-row-{{ slot.id }}">
-                    <td>{{ slot.slot_date.strftime('%B %d, %Y') }}</td>
-                    <td>{{ slot.slot_start_time }}</td>
-                    <td>{{ slot.slot_end_time }}</td>
-                    <td>
-                        {% if slot.available %}
-                            Available
-                        {% else %}
-                            Unavailable
-                        {% endif %}
-                    </td>
-                    <td>
-                        <form class="delete-slot-form" action="{{ url_for('delete_slot', slot_id=slot.id) }}" method="post">
-                            <button type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-            <p>No slots found.</p>
-        {% endif %}
-        <div class="back-link">
-            <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+        
+        <div class="delete-slots-container">
+            <div class="delete-header">
+                <h1 class="delete-title">Delete Slots</h1>
+                <p class="delete-subtitle">Remove unwanted or outdated appointment slots</p>
+            </div>
+            
+            <div class="search-section">
+                <form method="GET" action="{{ url_for('delete_slots') }}" class="search-form">
+                    <div class="search-group">
+                        <label for="search_date" class="search-label">🔍 Search by Date</label>
+                        <input type="date" id="search_date" name="search_date" value="{{ search_date }}" class="search-input">
+                    </div>
+                    <button type="submit" class="search-button">Search Slots</button>
+                </form>
+            </div>
+            
+            {% if search_date %}
+                <div class="search-info">
+                    <span class="search-date-display">📅 Showing slots for: <strong>{{ search_date }}</strong></span>
+                    <a class="show-all-link" href="/admin/slots">Show All Slots Instead</a>
+                </div>
+            {% endif %}
+            
+            <div class="slots-section">
+                {% if slots %}
+                    <div class="bulk-actions">
+                        <div class="select-all-container">
+                            <input type="checkbox" id="selectAll" class="select-all-checkbox">
+                            <label for="selectAll" class="select-all-label">Select All Slots</label>
+                        </div>
+                        <button type="button" id="bulkDeleteBtn" class="bulk-delete-button" disabled>
+                            🗑️ Delete Selected (<span id="selectedCount">0</span>)
+                        </button>
+                    </div>
+                    
+                    <table class="slots-table sortable">
+                        <thead>
+                            <tr>
+                                <th>☑️ Select</th>
+                                <th>📅 Date</th>
+                                <th>🕐 Start Time</th>
+                                <th>🕕 End Time</th>
+                                <th>📊 Availability</th>
+                                <th>⚡ Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in slots %}
+                            <tr id="slot-row-{{ slot.id }}">
+                                <td>
+                                    <input type="checkbox" class="slot-checkbox" value="{{ slot.id }}" data-slot-id="{{ slot.id }}">
+                                </td>
+                                <td><strong>{{ slot.slot_date.strftime('%B %d, %Y') }}</strong></td>
+                                <td>{{ slot.slot_start_time }}</td>
+                                <td>{{ slot.slot_end_time }}</td>
+                                <td>
+                                    {% if slot.available %}
+                                        <span class="availability-badge availability-available">✅ Available</span>
+                                    {% else %}
+                                        <span class="availability-badge availability-unavailable">❌ Unavailable</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form class="delete-slot-form" action="{{ url_for('delete_slot', slot_id=slot.id) }}" method="post" style="margin: 0;">
+                                        <button type="submit" class="delete-button">🗑️ Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="no-slots-message">
+                        <span class="no-slots-icon">📋</span>
+                        <p><strong>No slots found.</strong></p>
+                        <p>Try adjusting your search criteria or create some new slots.</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="back-link">
+                <a href="{{ url_for('admin_dashboard') }}" class="back-button">
+                    ← Back to Dashboard
+                </a>
+            </div>
         </div>
     </div>
+    
     <script src="{{ url_for('static', filename='sorttable.js') }}"></script>
     <script>
         // Execute after the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const slotCheckboxes = document.querySelectorAll('.slot-checkbox');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const selectedCountSpan = document.getElementById('selectedCount');
             const deleteForms = document.querySelectorAll('.delete-slot-form');
+
+            // Update selected count and button state
+            function updateBulkDeleteButton() {
+                const selectedCheckboxes = document.querySelectorAll('.slot-checkbox:checked');
+                const count = selectedCheckboxes.length;
+                selectedCountSpan.textContent = count;
+                bulkDeleteBtn.disabled = count === 0;
+                
+                // Update select all checkbox state
+                const totalCheckboxes = slotCheckboxes.length;
+                if (count === 0) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = false;
+                } else if (count === totalCheckboxes) {
+                    selectAllCheckbox.indeterminate = false;
+                    selectAllCheckbox.checked = true;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                    selectAllCheckbox.checked = false;
+                }
+            }
+
+            // Select all functionality
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const isChecked = this.checked;
+                    slotCheckboxes.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                    updateBulkDeleteButton();
+                });
+            }
+
+            // Individual checkbox change
+            slotCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateBulkDeleteButton);
+            });
+
+            // Bulk delete functionality
+            if (bulkDeleteBtn) {
+                bulkDeleteBtn.addEventListener('click', function() {
+                    const selectedCheckboxes = document.querySelectorAll('.slot-checkbox:checked');
+                    const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+                    
+                    if (selectedIds.length === 0) {
+                        alert('Please select at least one slot to delete.');
+                        return;
+                    }
+
+                    if (!confirm(`Are you sure you want to delete ${selectedIds.length} slot(s)? This action cannot be undone.`)) {
+                        return;
+                    }
+
+                    // Disable button during deletion
+                    bulkDeleteBtn.disabled = true;
+                    bulkDeleteBtn.textContent = 'Deleting...';
+
+                    fetch('/admin/delete_slots_bulk', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ slot_ids: selectedIds })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove selected rows from the table
+                            selectedCheckboxes.forEach(checkbox => {
+                                const row = checkbox.closest('tr');
+                                row.style.transition = 'all 0.3s ease';
+                                row.style.transform = 'translateX(-100%)';
+                                row.style.opacity = '0';
+                                setTimeout(() => row.remove(), 300);
+                            });
+                            
+                            // Reset states
+                            setTimeout(() => {
+                                updateBulkDeleteButton();
+                                bulkDeleteBtn.textContent = '🗑️ Delete Selected (0)';
+                                
+                                // Check if any slots remain
+                                const remainingRows = document.querySelectorAll('tbody tr');
+                                if (remainingRows.length === 0) {
+                                    // Show no slots message
+                                    const tbody = document.querySelector('tbody');
+                                    tbody.innerHTML = `
+                                        <tr>
+                                            <td colspan="6" class="no-slots-message">
+                                                <span class="no-slots-icon">📋</span>
+                                                <p><strong>No slots found.</strong></p>
+                                                <p>All slots have been deleted.</p>
+                                            </td>
+                                        </tr>
+                                    `;
+                                    // Hide bulk actions
+                                    document.querySelector('.bulk-actions').style.display = 'none';
+                                }
+                            }, 350);
+                            
+                            alert(`Successfully deleted ${data.deleted_count} slot(s).`);
+                        } else {
+                            alert('Error deleting slots: ' + (data.error || 'Unknown error.'));
+                            bulkDeleteBtn.disabled = false;
+                            bulkDeleteBtn.textContent = `🗑️ Delete Selected (${selectedIds.length})`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the slots.');
+                        bulkDeleteBtn.disabled = false;
+                        bulkDeleteBtn.textContent = `🗑️ Delete Selected (${selectedIds.length})`;
+                    });
+                });
+            }
+
+            // Individual delete forms
             deleteForms.forEach(form => {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    if(!confirm('Are you sure you want to delete this slot?')) {
+                    if(!confirm('Are you sure you want to delete this slot? This action cannot be undone.')) {
                         return;
                     }
                     
@@ -84,7 +621,29 @@
                     .then(data => {
                         if (data.success) {
                             // Remove the row from the table without refreshing
-                            row.remove();
+                            row.style.transition = 'all 0.3s ease';
+                            row.style.transform = 'translateX(-100%)';
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                                updateBulkDeleteButton();
+                                
+                                // Check if any slots remain
+                                const remainingRows = document.querySelectorAll('tbody tr');
+                                if (remainingRows.length === 0) {
+                                    const tbody = document.querySelector('tbody');
+                                    tbody.innerHTML = `
+                                        <tr>
+                                            <td colspan="6" class="no-slots-message">
+                                                <span class="no-slots-icon">📋</span>
+                                                <p><strong>No slots found.</strong></p>
+                                                <p>All slots have been deleted.</p>
+                                            </td>
+                                        </tr>
+                                    `;
+                                    document.querySelector('.bulk-actions').style.display = 'none';
+                                }
+                            }, 300);
                         } else {
                             alert('Error deleting slot: ' + (data.error || 'Unknown error.'));
                         }
@@ -95,6 +654,9 @@
                     });
                 });
             });
+
+            // Initial update
+            updateBulkDeleteButton();
         });
     </script>
 </body>

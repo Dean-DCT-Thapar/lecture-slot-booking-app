@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - EduTube Slots</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="container">
+            <div class="login-form-container">
+                <div class="form-header">
+                    <div class="logo-container">
+                        <div class="logo-icon">🎓</div>
+                        <div class="brand-text">
+                            <h1>404 - Page Not Found</h1>
+                            <p>The page you're looking for doesn't exist.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modern-form">
+                    <div class="error-content">
+                        <div class="error-icon">🔍</div>
+                        <h2>Oops! Page Not Found</h2>
+                        <p>The page you requested could not be found. It might have been moved, deleted, or you entered the wrong URL.</p>
+                        
+                        <div class="error-actions">
+                            <a href="{{ url_for('index') }}" class="form-button btn-primary">
+                                🏠 Go to Homepage
+                            </a>
+                            <button onclick="history.back()" class="form-button btn-secondary">
+                                ← Go Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .error-content {
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+        
+        .error-content h2 {
+            color: var(--primary-600);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .error-content p {
+            color: var(--neutral-600);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .error-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-secondary {
+            background: var(--neutral-100);
+            color: var(--neutral-700);
+            border: 2px solid var(--neutral-300);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--neutral-200);
+            border-color: var(--neutral-400);
+        }
+        
+        @media (max-width: 480px) {
+            .error-actions {
+                flex-direction: column;
+            }
+            
+            .error-icon {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</body>
+</html>

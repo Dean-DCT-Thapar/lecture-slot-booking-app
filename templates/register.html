@@ -3,38 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Register - Slot Booking System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>Register</h1>
-        <form id="registerForm" action="/register" method="post">
-            <div class="name-row">
-                <input type="text" id="first_name" name="first_name" placeholder="First Name" required>
-                <input type="text" id="last_name" name="last_name" placeholder="Last Name" required>
+    <div class="page-wrapper">
+        <div class="container">
+            <div class="form-header">
+                <div class="logo-section">
+                    <div class="logo-icon">📚</div>
+                    <h1>Create Account</h1>
+                    <p class="subtitle">Join our slot booking system to get started</p>
+                </div>
             </div>
-            <input type="text" id="username" name="username" placeholder="Username (will be used for login)" required>
-            <input type="email" id="email" name="email" placeholder="Email" required>
-            <input type="password" id="password" name="password" placeholder="Password" required>
-            <button type="submit">Register</button>
-            <a href="{{ url_for('login') }}">Login</a>
-            <br><br>
-        </form>
-        {% if message %}
-            <p style="color: red;">{{ message }}</p>
-        {% endif %}
+            
+            <form id="registerForm" action="/register" method="post" class="modern-form">
+                <div class="form-section">
+                    <h3>Personal Information</h3>
+                    <div class="input-group">
+                        <div class="name-row">
+                            <div class="input-wrapper">
+                                <label for="first_name">First Name</label>
+                                <input type="text" id="first_name" name="first_name" placeholder="Enter your first name" required>
+                            </div>
+                            <div class="input-wrapper">
+                                <label for="last_name">Last Name</label>
+                                <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Account Details</h3>
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" placeholder="Choose a username for login" required>
+                            <small class="input-hint">This will be used for logging in</small>
+                            <div class="validation-message" id="username-validation"></div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                            <div class="validation-message" id="email-validation"></div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" placeholder="Create a secure password" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <span>Create Account</span>
+                        <div class="btn-shine"></div>
+                    </button>
+                    
+                    <div class="auth-links">
+                        <p>Already have an account? <a href="{{ url_for('login') }}" class="link-accent">Sign in here</a></p>
+                    </div>
+                </div>
+            </form>
+
+            {% if message %}
+                <div class="alert alert-error">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-content">
+                        <strong>Registration Failed</strong>
+                        <p>{{ message }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
     </div>
 
     <script>
+        // Validation state
+        const validationState = {
+            username: false,
+            email: false
+        };
+
+        // Debounce function to limit API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Check availability function
+        async function checkAvailability(field, value) {
+            if (!value.trim()) {
+                clearValidationMessage(field);
+                return;
+            }
+
+            try {
+                const response = await fetch('/check_availability', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        field: field,
+                        value: value
+                    })
+                });
+
+                const data = await response.json();
+                updateValidationMessage(field, data.available);
+            } catch (error) {
+                console.error('Error checking availability:', error);
+            }
+        }
+
+        // Update validation message
+        function updateValidationMessage(field, isAvailable) {
+            const messageElement = document.getElementById(`${field}-validation`);
+            const inputElement = document.getElementById(field);
+            
+            if (isAvailable) {
+                messageElement.textContent = `✓ ${field.charAt(0).toUpperCase() + field.slice(1)} is available`;
+                messageElement.className = 'validation-message success';
+                inputElement.classList.remove('error');
+                inputElement.classList.add('success');
+                validationState[field] = true;
+            } else {
+                messageElement.textContent = `✗ This ${field} is already taken`;
+                messageElement.className = 'validation-message error';
+                inputElement.classList.remove('success');
+                inputElement.classList.add('error');
+                validationState[field] = false;
+            }
+            
+            updateSubmitButton();
+        }
+
+        // Clear validation message
+        function clearValidationMessage(field) {
+            const messageElement = document.getElementById(`${field}-validation`);
+            const inputElement = document.getElementById(field);
+            
+            messageElement.textContent = '';
+            messageElement.className = 'validation-message';
+            inputElement.classList.remove('success', 'error');
+            validationState[field] = false;
+            updateSubmitButton();
+        }
+
+        // Update submit button state
+        function updateSubmitButton() {
+            const submitButton = document.querySelector('.btn-primary');
+            const usernameHasValue = document.getElementById('username').value.trim() !== '';
+            const emailHasValue = document.getElementById('email').value.trim() !== '';
+            
+            if (usernameHasValue && emailHasValue && validationState.username && validationState.email) {
+                submitButton.disabled = false;
+                submitButton.classList.remove('disabled');
+            } else {
+                submitButton.disabled = true;
+                submitButton.classList.add('disabled');
+            }
+        }
+
+        // Debounced check functions
+        const debouncedUsernameCheck = debounce((value) => checkAvailability('username', value), 500);
+        const debouncedEmailCheck = debounce((value) => checkAvailability('email', value), 500);
+
+        // Form submission handler
         document.getElementById('registerForm').addEventListener('submit', function(event) {
+            // Check if validation is complete
+            if (!validationState.username || !validationState.email) {
+                event.preventDefault();
+                alert('Please wait for validation to complete before submitting.');
+                return;
+            }
+
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
-            const confirmation = confirm(`Are you sure you want to register with the username: "${username}" and email: "${email}"?`);
+            const firstName = document.getElementById('first_name').value;
+            const lastName = document.getElementById('last_name').value;
+            
+            const confirmationMessage = `Please confirm your registration details:
+            
+Name: ${firstName} ${lastName}
+Username: ${username}
+Email: ${email}
+
+Are you sure you want to register with these details?`;
+            
+            const confirmation = confirm(confirmationMessage);
             if (!confirmation) {
-                event.preventDefault(); // Prevent form submission if the user cancels
+                event.preventDefault();
             }
         });
+
+        // Input event listeners
+        document.getElementById('username').addEventListener('input', function() {
+            const value = this.value.trim();
+            if (value.length >= 3) {
+                debouncedUsernameCheck(value);
+            } else {
+                clearValidationMessage('username');
+            }
+        });
+
+        document.getElementById('email').addEventListener('input', function() {
+            const value = this.value.trim();
+            if (value.includes('@') && value.includes('.')) {
+                debouncedEmailCheck(value);
+            } else {
+                clearValidationMessage('email');
+            }
+        });
+
+        // Add input animation effects
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+            
+            input.addEventListener('blur', function() {
+                if (!this.value) {
+                    this.parentElement.classList.remove('focused');
+                }
+            });
+        });
+
+        // Initialize submit button state
+        updateSubmitButton();
     </script>
 </body>
 </html>

@@ -21,3 +21,4 @@ instance/
 .idea/
 
 google_credentials.json
+credentials.json

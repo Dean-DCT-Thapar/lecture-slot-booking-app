@@ -1,165 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Book a Slot</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Slot - Slot Booking System</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-    <style>
-        .months-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 24px;
-            justify-content: center;
-        }
-        .month-block {
-            flex: 1 1 300px;
-            min-width: 260px;
-            max-width: 340px;
-            margin-bottom: 24px;
-            background: #fafafa;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px #0001;
-            padding: 10px 8px 18px 8px;
-        }
-        .month-block h3 {
-            text-align: center;
-            margin: 8px 0 12px 0;
-            font-size: 1.1em;
-        }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-        }
-        .calendar-tile {
-            padding: 3px 0;
-            font-size: 0.8em;
-            background: #f2f2f2;
-            border-radius: 4px;
-            text-align: center;
-            cursor: pointer;
-            border: 1.5px solid transparent;
-            font-weight: bold;
-            transition: border 0.2s, background 0.2s;
-            min-width: 0;
-            min-height: 22px;
-            max-width: 24px;
-            box-sizing: border-box;
-            margin: 0;
-        }
-        .calendar-tile.available {
-            background: #e6ffe6;
-            border-color: #28a745;
-            color: #28a745;
-        }
-        .calendar-tile.unavailable {
-            background: #f8d7da;
-            color: #aaa;
-            cursor: not-allowed;
-        }
-        .calendar-tile.selected {
-            background: #28a745;
-            color: #fff;
-            border-color: #155724;
-        }
-        .slots-section {
-            margin-top: 30px;
-        }
-        .back-btn {
-            margin-bottom: 20px;
-            background: #007bff;
-            color: #fff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .back-btn:hover {
-            background: #0056b3;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='teacher_slots.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h1>Book a Slot</h1>
-        <a href="{{ url_for('teacher_dashboard') }}" class="back-btn" style="margin-bottom:0; margin-left:16px;">Back to Dashboard</a>
-    </div>
-    <br>
-    <!-- Calendar Grid -->
-    <div id="calendar-view">
-        <div class="months-row">
-            {% set months = calendar_days|groupby('month') %}
-            {% for month, days_in_month in months %}
-                {% if loop.index0 % 3 == 0 and not loop.first %}
-                    </div><div class="months-row">
-                {% endif %}
-                <div class="month-block">
-                    <h3>{{ days_in_month[0].strftime('%B %Y') }}</h3>
-                    <!-- Weekday headers -->
-                    <div class="calendar-grid" style="margin-bottom:2px;">
-                        <div style="font-size:0.8em; color:#888;">Mon</div>
-                        <div style="font-size:0.8em; color:#888;">Tue</div>
-                        <div style="font-size:0.8em; color:#888;">Wed</div>
-                        <div style="font-size:0.8em; color:#888;">Thu</div>
-                        <div style="font-size:0.8em; color:#888;">Fri</div>
-                        <div style="font-size:0.8em; color:#888;">Sat</div>
-                        <div style="font-size:0.8em; color:#888;">Sun</div>
-                    </div>
-                    <div class="calendar-grid">
-                        {% set first_weekday = days_in_month[0].weekday() %}
-                        {% set blanks = days_in_month[0].weekday() %}
-                        {% for _ in range(blanks) %}
-                            <div></div>
-                        {% endfor %}
-                        {% for day in days_in_month %}
-                            {% set date_str = day.strftime('%Y-%m-%d') %}
-                            <div class="calendar-tile
-                                {% if date_str in available_dates %}available{% else %}unavailable{% endif %}"
-                                data-date="{{ date_str }}"
-                                {% if date_str in available_dates %}tabindex="0"{% endif %}>
-                                {{ day.day }}
-                            </div>
-                        {% endfor %}
+    <div class="booking-wrapper">
+        <!-- Modern Header -->
+        <header class="booking-header">
+            <div class="header-content">
+                <div class="page-title">
+                    <div class="title-icon">📅</div>
+                    <div class="title-text">
+                        <h1>Book a Slot</h1>
+                        <p>Select your preferred date and time</p>
                     </div>
                 </div>
-            {% endfor %}
-        </div>
+                <a href="{{ url_for('teacher_dashboard') }}" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Back to Dashboard
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="booking-main">
+            <div class="container">
+                <!-- Calendar Section -->
+                <div id="calendar-view" class="calendar-section">
+                    <div class="section-header">
+                        <h2>Available Dates</h2>
+                        <p>Click on any available date to view time slots</p>
+                    </div>
+                    
+                    <div class="calendar-container">
+                        <div class="months-grid">
+                            {% set months = calendar_days|groupby('month') %}
+                            {% for month, days_in_month in months %}
+                                <div class="month-card">
+                                    <div class="month-header">
+                                        <h3>{{ days_in_month[0].strftime('%B %Y') }}</h3>
+                                    </div>
+                                    
+                                    <!-- Weekday headers -->
+                                    <div class="weekdays">
+                                        <div class="weekday">Sun</div>
+                                        <div class="weekday">Mon</div>
+                                        <div class="weekday">Tue</div>
+                                        <div class="weekday">Wed</div>
+                                        <div class="weekday">Thu</div>
+                                        <div class="weekday">Fri</div>
+                                        <div class="weekday">Sat</div>
+                                    </div>
+                                    
+                                    <!-- Calendar grid -->
+                                    <div class="calendar-grid">
+                                        {% set first_weekday = (days_in_month[0].weekday() + 1) % 7 %}
+                                        {% for _ in range(first_weekday) %}
+                                            <div class="calendar-day empty"></div>
+                                        {% endfor %}
+                                        {% for day in days_in_month %}
+                                            {% set date_str = day.strftime('%Y-%m-%d') %}
+                                            <div class="calendar-day {% if date_str in available_dates %}available{% else %}unavailable{% endif %}"
+                                                 data-date="{{ date_str }}"
+                                                 {% if date_str in available_dates %}tabindex="0"{% endif %}>
+                                                <span class="day-number">{{ day.day }}</span>
+                                                {% if date_str in available_dates %}
+                                                    <div class="availability-indicator"></div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slots Section -->
+                <div id="slots-view" class="slots-section" style="display:none;">
+                    <div class="slots-header">
+                        <button class="back-to-calendar-btn" id="back-to-calendar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Back to Calendar
+                        </button>
+                        <div class="selected-date-info">
+                            <h2>Available Time Slots</h2>
+                            <p id="selected-date-display">Select your preferred time</p>
+                        </div>
+                    </div>
+                    
+                    <div id="slots-content" class="slots-content">
+                        <!-- Slots will be loaded here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Slots Section (hidden by default) -->
-    <div id="slots-view" style="display:none;">
-        <button class="back-btn" id="back-to-calendar">Back to Calendar</button>
-        <div id="slots-section"></div>
-    </div>
-</div>
-<script>
-    // Handle tile click to fetch slots and show slots view
-    document.querySelectorAll('.calendar-tile.available').forEach(tile => {
-        tile.addEventListener('click', function() {
-            const date = this.getAttribute('data-date');
-            fetch(`{{ url_for('teacher_slots') }}?date=${date}`, {
-                headers: {'X-Requested-With': 'XMLHttpRequest'}
-            })
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('slots-section').innerHTML = html;
-                document.getElementById('calendar-view').style.display = 'none';
-                document.getElementById('slots-view').style.display = 'block';
+    <script>
+        // Handle calendar day clicks
+        document.querySelectorAll('.calendar-day.available').forEach(day => {
+            day.addEventListener('click', function() {
+                const date = this.getAttribute('data-date');
+                const dateObj = new Date(date);
+                const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                // Update selected date display
+                document.getElementById('selected-date-display').textContent = formattedDate;
+                
+                // Show loading state
+                document.getElementById('slots-content').innerHTML = `
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Loading available slots...</p>
+                    </div>
+                `;
+                
+                // Fetch slots for the selected date
+                fetch(`{{ url_for('teacher_slots') }}?date=${date}`, {
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                })
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('slots-content').innerHTML = html;
+                    document.getElementById('calendar-view').style.display = 'none';
+                    document.getElementById('slots-view').style.display = 'block';
+                    
+                    // Scroll to top of slots section
+                    document.getElementById('slots-view').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                })
+                .catch(error => {
+                    document.getElementById('slots-content').innerHTML = `
+                        <div class="error-state">
+                            <div class="error-icon">❌</div>
+                            <h3>Error Loading Slots</h3>
+                            <p>Unable to load available time slots. Please try again.</p>
+                            <button onclick="location.reload()" class="retry-btn">Retry</button>
+                        </div>
+                    `;
+                });
+            });
+            
+            // Add keyboard navigation
+            day.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+            
+            // Add hover effects
+            day.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-1px)';
+            });
+            
+            day.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
             });
         });
-        tile.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                this.click();
-            }
-        });
-    });
 
-    // Back to calendar
-    document.getElementById('back-to-calendar').addEventListener('click', function() {
-        document.getElementById('slots-view').style.display = 'none';
-        document.getElementById('calendar-view').style.display = 'block';
-        document.getElementById('slots-section').innerHTML = '';
-    });
-</script>
+        // Back to calendar functionality
+        document.getElementById('back-to-calendar').addEventListener('click', function() {
+            document.getElementById('slots-view').style.display = 'none';
+            document.getElementById('calendar-view').style.display = 'block';
+            document.getElementById('slots-content').innerHTML = '';
+            
+            // Scroll back to calendar
+            document.getElementById('calendar-view').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        });
+
+        // Add staggered animation to calendar days
+        document.querySelectorAll('.calendar-day').forEach((day, index) => {
+            day.style.animationDelay = `${(index % 35) * 0.02}s`;
+        });
+    </script>
 </body>
 </html>

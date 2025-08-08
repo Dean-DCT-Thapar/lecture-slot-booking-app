@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Admin Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Modern Admin Navigation Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="brand-section">
+                    <div class="logo">👥</div>
+                    <div class="brand-text">
+                        <h1>User Management</h1>
+                        <span class="brand-subtitle">Admin Portal</span>
+                    </div>
+                </div>
+                <div class="user-section">
+                    <div class="user-info">
+                        <div class="user-avatar admin">{{ current_user.username[0].upper() }}</div>
+                        <div class="user-details">
+                            <span class="welcome-text">Administrator</span>
+                            <span class="username">{{ current_user.username }}</span>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        <span>Logout</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content -->
+        <main class="dashboard-main">
+            <div class="container">
+                <!-- Navigation Breadcrumb -->
+                <div class="breadcrumb">
+                    <a href="{{ url_for('admin_dashboard') }}" class="breadcrumb-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <span class="breadcrumb-separator">→</span>
+                    <span class="breadcrumb-current">User Management</span>
+                </div>
+
+                <!-- Dashboard Stats -->
+                <div class="stats-section">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <h3>{{ users|length }}</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🛡️</div>
+                        <div class="stat-content">
+                            <h3>{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</h3>
+                            <p>Administrators</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎓</div>
+                        <div class="stat-content">
+                            <h3>{{ users|selectattr('role', 'equalto', 'teacher')|list|length }}</h3>
+                            <p>Teachers</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Management Section -->
+                <div class="bookings-section">
+                    <div class="section-header">
+                        <h2>Registered Users</h2>
+                        <div class="header-controls">
+                            <div class="search-container">
+                                <div class="search-box">
+                                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                                        <path d="21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    <input type="text" id="userSearch" placeholder="Search users by name, email, or username..." class="search-input">
+                                    <button class="clear-search" id="clearSearch" title="Clear search">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+                                            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="section-actions">
+                                <button class="filter-btn active" data-filter="all">All Users</button>
+                                <button class="filter-btn" data-filter="admin">Admins</button>
+                                <button class="filter-btn" data-filter="teacher">Teachers</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if users %}
+                    <div class="table-container">
+                        <div class="table-responsive">
+                            <table class="booking-table sortable">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>User</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>Contact</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>Role</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>Activity</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr class="booking-row user-row" data-role="{{ user.role }}">
+                                        <td>
+                                            <div class="user-cell">
+                                                <div class="user-avatar-small {% if user.role == 'admin' %}admin{% endif %}">{{ user.username[0].upper() }}</div>
+                                                <div class="user-info-small">
+                                                    <span class="username-small">{{ user.username }}</span>
+                                                    <span class="fullname-small">{{ user.first_name }} {{ user.last_name }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="contact-cell">
+                                                <span class="email">{{ user.email or 'Not provided' }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="role-cell">
+                                                {% if user.role == 'admin' %}
+                                                    <span class="role-badge admin">🛡️ Administrator</span>
+                                                {% else %}
+                                                    <span class="role-badge teacher">🎓 Teacher</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="activity-cell">
+                                                {% set user_bookings = user.bookings|list|length %}
+                                                <span class="booking-count">{{ user_bookings }} booking{{ 's' if user_bookings != 1 else '' }}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <h3>No users found</h3>
+                        <p>There are currently no registered users in the system.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">User Details</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="user-detail-grid">
+                    <div class="detail-item">
+                        <label>Username:</label>
+                        <span id="modalUsername"></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Full Name:</label>
+                        <span id="modalFullName"></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Email:</label>
+                        <span id="modalEmail"></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Role:</label>
+                        <span id="modalRole"></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Total Bookings:</label>
+                        <span id="modalBookings"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='sorttable.js') }}"></script>
+    <script>
+        // Search and filter state
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        // Search functionality
+        function performSearch() {
+            const searchTerm = document.getElementById('userSearch').value.toLowerCase().trim();
+            currentSearch = searchTerm;
+            
+            const rows = document.querySelectorAll('.user-row');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const userRole = row.dataset.role;
+                const username = row.querySelector('.username-small').textContent.toLowerCase();
+                const fullname = row.querySelector('.fullname-small').textContent.toLowerCase();
+                const email = row.querySelector('.email').textContent.toLowerCase();
+                
+                // Check if matches search
+                const matchesSearch = !searchTerm || 
+                    username.includes(searchTerm) || 
+                    fullname.includes(searchTerm) || 
+                    email.includes(searchTerm);
+                
+                // Check if matches filter
+                const matchesFilter = currentFilter === 'all' || 
+                    (currentFilter === 'admin' && userRole === 'admin') || 
+                    (currentFilter === 'teacher' && userRole === 'teacher');
+                
+                const shouldShow = matchesSearch && matchesFilter;
+                row.style.display = shouldShow ? '' : 'none';
+                
+                if (shouldShow) visibleCount++;
+            });
+
+            // Update clear button visibility
+            const clearBtn = document.getElementById('clearSearch');
+            clearBtn.style.display = searchTerm ? 'flex' : 'none';
+
+            // Show no results message if needed
+            updateNoResultsMessage(visibleCount);
+        }
+
+        // Update no results message
+        function updateNoResultsMessage(visibleCount) {
+            let noResultsDiv = document.getElementById('noResults');
+            
+            if (visibleCount === 0 && (currentSearch || currentFilter !== 'all')) {
+                if (!noResultsDiv) {
+                    noResultsDiv = document.createElement('div');
+                    noResultsDiv.id = 'noResults';
+                    noResultsDiv.className = 'no-results-message';
+                    noResultsDiv.innerHTML = `
+                        <div class="no-results-icon">🔍</div>
+                        <h3>No users found</h3>
+                        <p id="noResultsText">Try adjusting your search criteria or filters.</p>
+                    `;
+                    document.querySelector('.table-container').after(noResultsDiv);
+                }
+                
+                // Update message based on search/filter state
+                const messageText = document.getElementById('noResultsText');
+                if (currentSearch && currentFilter !== 'all') {
+                    messageText.textContent = `No ${currentFilter}s found matching "${currentSearch}".`;
+                } else if (currentSearch) {
+                    messageText.textContent = `No users found matching "${currentSearch}".`;
+                } else {
+                    messageText.textContent = `No ${currentFilter}s found.`;
+                }
+                
+                noResultsDiv.style.display = 'block';
+                document.querySelector('.table-container').style.display = 'none';
+            } else {
+                if (noResultsDiv) {
+                    noResultsDiv.style.display = 'none';
+                }
+                document.querySelector('.table-container').style.display = 'block';
+            }
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        const debouncedSearch = debounce(performSearch, 300);
+
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active state
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                currentFilter = this.dataset.filter;
+                performSearch(); // Re-apply search with new filter
+            });
+        });
+
+        // Search input event listeners
+        document.getElementById('userSearch').addEventListener('input', debouncedSearch);
+        
+        // Clear search functionality
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            document.getElementById('userSearch').value = '';
+            currentSearch = '';
+            performSearch();
+            document.getElementById('userSearch').focus();
+        });
+
+        // Enter key search
+        document.getElementById('userSearch').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+
+        // Modal functionality
+        function viewUserDetails(id, username, firstName, lastName, email, role, bookings) {
+            document.getElementById('modalUsername').textContent = username;
+            document.getElementById('modalFullName').textContent = `${firstName} ${lastName}`;
+            document.getElementById('modalEmail').textContent = email;
+            document.getElementById('modalRole').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+            document.getElementById('modalBookings').textContent = bookings;
+            document.getElementById('userModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('userModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Add staggered animation to table rows
+        document.querySelectorAll('.user-row').forEach((row, index) => {
+            row.style.animationDelay = `${index * 0.1}s`;
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Focus search input for better UX
+            document.getElementById('userSearch').focus();
+        });
+    </script>
+
+    <style>
+        /* Additional styles specific to user management */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .breadcrumb-separator {
+            color: var(--primary-400);
+            font-weight: 600;
+        }
+
+        .breadcrumb-current {
+            color: var(--primary-800);
+            font-weight: 600;
+        }
+
+        /* Search functionality styles */
+        .header-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .search-container {
+            flex: 1;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid var(--primary-200);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-box:focus-within {
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
+        }
+
+        .search-icon {
+            color: var(--primary-400);
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            color: var(--primary-800);
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .search-input::placeholder {
+            color: var(--primary-400);
+        }
+
+        .clear-search {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-100);
+            border: none;
+            border-radius: 6px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            color: var(--primary-600);
+            transition: all 0.3s ease;
+            margin-left: 0.5rem;
+        }
+
+        .clear-search:hover {
+            background: var(--primary-200);
+            color: var(--primary-800);
+        }
+
+        /* No results message */
+        .no-results-message {
+            display: none;
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 16px;
+            border: 1px solid var(--primary-200);
+        }
+
+        .no-results-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .no-results-message h3 {
+            color: var(--primary-800);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .no-results-message p {
+            color: var(--primary-600);
+            margin: 0;
+        }
+
+        .role-cell {
+            padding: 0.5rem 0;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .role-badge.admin {
+            background: var(--warning-100);
+            color: var(--warning-700);
+            border: 1px solid var(--warning-200);
+        }
+
+        .role-badge.teacher {
+            background: var(--primary-100);
+            color: var(--primary-700);
+            border: 1px solid var(--primary-200);
+        }
+
+        .activity-cell {
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--primary-700);
+            font-weight: 500;
+        }
+
+        .booking-count {
+            background: var(--success-100);
+            color: var(--success-700);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            border: 1px solid var(--success-200);
+        }
+
+        .btn-view {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view:hover {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(74, 85, 104, 0.3);
+        }
+
+        .current-user-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--success-600);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--primary-200);
+            background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+            border-radius: 16px 16px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--primary-800);
+            font-size: 1.25rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-600);
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--primary-800);
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .user-detail-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--primary-50);
+            border-radius: 12px;
+            border: 1px solid var(--primary-200);
+        }
+
+        .detail-item label {
+            font-weight: 600;
+            color: var(--primary-700);
+        }
+
+        .detail-item span {
+            color: var(--primary-800);
+            font-weight: 500;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+            }
+
+            .modal-header,
+            .modal-body {
+                padding: 1rem;
+            }
+
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .header-controls {
+                gap: 1.5rem;
+            }
+
+            .search-box {
+                padding: 1rem;
+            }
+
+            .search-input {
+                font-size: 1rem;
+            }
+
+            .search-input::placeholder {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .header-controls {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .search-container {
+                max-width: 400px;
+            }
+        }
+    </style>
+</body>
+</html>

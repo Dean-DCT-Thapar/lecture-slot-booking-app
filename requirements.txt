@@ -7,3 +7,6 @@ google-auth-httplib2
 google-auth-oauthlib
 APScheduler
 gunicorn
+python-dotenv
+Flask-WTF
+email-validator

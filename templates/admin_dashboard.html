@@ -1,55 +1,261 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Slot Booking System</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="navbar">
-            <div class="welcome">Welcome, {{ current_user.username }}</div>
-            <a href="{{ url_for('logout') }}">Logout</a>
-        </div>
-        <h2>All Bookings</h2>
-        {% if bookings %}
-            <div class="table-responsive">
-                <table class="booking-table sortable">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th class="sorttable_nosort">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for booking in bookings %}
-                        <tr>
-                            <td>{{ booking.user.username }}</td>
-                            <td>{{ booking.user.first_name + booking.user.last_name }}</td>
-                            <td>{{ booking.user.email }}</td>
-                            <td>{{ booking.slot.slot_date }}</td>
-                            <td>{{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}</td>
-                            <td>
-                                <form action="{{ url_for('delete_booking', booking_id=booking.id) }}" method="post">
-                                    <button type="submit">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div class="dashboard-wrapper">
+        <!-- Modern Admin Navigation Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="brand-section">
+                    <div class="logo">🛠️</div>
+                    <div class="brand-text">
+                        <h1>Slot Booking</h1>
+                        <span class="brand-subtitle">Admin Portal</span>
+                    </div>
+                </div>
+                <div class="user-section">
+                    <div class="user-info">
+                        <div class="user-avatar admin">{{ current_user.username[0].upper() }}</div>
+                        <div class="user-details">
+                            <span class="welcome-text">Administrator</span>
+                            <span class="username">{{ current_user.username }}</span>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        <span>Logout</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
-        {% else %}
-            <p>No bookings found.</p>
-        {% endif %}
-        <br><br>
-        <a href="{{url_for('admin_slots')}}">Modify Availability of Slots</a>
-        <a href="{{url_for('create_slot')}}">Create/Delete Slots</a>
+        </header>
+
+        <!-- Main Dashboard Content -->
+        <main class="dashboard-main">
+            <div class="container">
+                <!-- Dashboard Stats -->
+                <div class="stats-section">
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <h3>{{ bookings|length }}</h3>
+                            <p>Total Bookings</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <h3>{{ bookings|map(attribute='user')|unique|list|length }}</h3>
+                            <p>Active Users</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <h3>{{ bookings|selectattr('slot.slot_date', 'ge', current_date)|list|length }}</h3>
+                            <p>Upcoming Sessions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2>Administrative Actions</h2>
+                    <div class="action-cards">
+                        <a href="{{ url_for('admin_slots') }}" class="action-card primary">
+                            <div class="action-icon">⚙️</div>
+                            <div class="action-content">
+                                <h3>Manage Slots</h3>
+                                <p>Modify availability of existing slots</p>
+                            </div>
+                            <div class="action-arrow">→</div>
+                        </a>
+                        <a href="{{ url_for('create_slot') }}" class="action-card secondary">
+                            <div class="action-icon">➕</div>
+                            <div class="action-content">
+                                <h3>Create/Delete Slots</h3>
+                                <p>Add new slots or remove existing ones</p>
+                            </div>
+                            <div class="action-arrow">→</div>
+                        </a>
+                        <a href="{{ url_for('admin_users') }}" class="action-card tertiary">
+                            <div class="action-icon">👥</div>
+                            <div class="action-content">
+                                <h3>View Users</h3>
+                                <p>Manage and view registered users</p>
+                            </div>
+                            <div class="action-arrow">→</div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Bookings Management Section -->
+                <div class="bookings-section">
+                    <div class="section-header">
+                        <h2>All Bookings Management</h2>
+                        <div class="section-actions">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+                            <button class="filter-btn" data-filter="past">Past</button>
+                        </div>
+                    </div>
+
+                    {% if bookings %}
+                    <div class="table-container">
+                        <div class="table-responsive">
+                            <table class="booking-table sortable">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>User</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>Contact</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>Date</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>Time</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th class="sorttable_nosort">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr class="booking-row" data-date="{{ booking.slot.slot_date }}">
+                                        <td>
+                                            <div class="user-cell">
+                                                <div class="user-avatar-small">{{ booking.user.username[0].upper() }}</div>
+                                                <div class="user-info-small">
+                                                    <span class="username-small">{{ booking.user.username }}</span>
+                                                    <span class="fullname-small">{{ booking.user.first_name }} {{ booking.user.last_name }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="contact-cell">
+                                                <span class="email">{{ booking.user.email }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="date-cell">
+                                                <span class="date-main">{{ booking.slot.slot_date.strftime('%B %d, %Y') }}</span>
+                                                <span class="date-day">{{ booking.slot.slot_date.strftime('%A') }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="time-cell">
+                                                <span class="time-range">{{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="action-cell">
+                                                {% set booking_date = booking.slot.slot_date %}
+                                                {% set today = current_date %}
+                                                {% if booking_date < today %}
+                                                    <div class="past-event-indicator">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                                            <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2"/>
+                                                        </svg>
+                                                        <span>Completed</span>
+                                                    </div>
+                                                {% else %}
+                                                    <form action="{{ url_for('delete_booking', booking_id=booking.id) }}" method="post" 
+                                                          onsubmit="return confirm('Are you sure you want to delete this booking for {{ booking.user.username }} on {{ booking.slot.slot_date }}?');" 
+                                                          class="delete-form">
+                                                        <button type="submit" class="btn-delete">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                                <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            </svg>
+                                                            Delete
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <h3>No bookings found</h3>
+                        <p>There are currently no bookings in the system. Users can start booking slots once they are created.</p>
+                        <a href="{{ url_for('create_slot') }}" class="btn-primary">Create New Slots</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
     </div>
+
     <script src="{{ url_for('static', filename='sorttable.js') }}"></script>
+    <script>
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active state
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                const rows = document.querySelectorAll('.booking-row');
+                const today = new Date().toISOString().split('T')[0];
+                
+                rows.forEach(row => {
+                    const rowDate = row.dataset.date;
+                    let show = true;
+                    
+                    if (filter === 'upcoming') {
+                        show = rowDate >= today;
+                    } else if (filter === 'past') {
+                        show = rowDate < today;
+                    }
+                    
+                    row.style.display = show ? '' : 'none';
+                });
+            });
+        });
+
+        // Add staggered animation to table rows
+        document.querySelectorAll('.booking-row').forEach((row, index) => {
+            row.style.animationDelay = `${index * 0.1}s`;
+        });
+    </script>
 </body>
 </html>

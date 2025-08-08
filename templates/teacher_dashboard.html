@@ -1,58 +1,218 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Teacher Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Slot Booking System</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='teacher_dashboard.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="navbar">
-            <div class="welcome">Welcome, {{ current_user.username }}</div>
-            <a href="{{ url_for('logout') }}">Logout</a>
-        </div>
-        <div class="dashboard-header">
-            <h2>Your Bookings</h2>
-        </div>
-        {% if bookings %}
-        <div class="table-responsive">
-            <table class="booking-table sortable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Description</th>
-                        <th class="sorttable_nosort">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for booking in bookings %}
-                    <tr>
-                        <td>{{ booking.slot.slot_date.strftime('%B %d, %Y') }}</td>
-                        <td>{{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}</td>
-                        <td>
-                            <div class="scrollable-description">
-                                {{ booking.description }}
+    <div class="dashboard-wrapper">
+        <!-- Modern Navigation Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="brand-section">
+                    <div class="logo">📚</div>
+                    <div class="brand-text">
+                        <h1>Slot Booking</h1>
+                        <span class="brand-subtitle">Teacher Portal</span>
+                    </div>
+                </div>
+                <div class="user-section">
+                    <div class="user-info">
+                        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+                        <div class="user-details">
+                            <span class="welcome-text">Welcome back,</span>
+                            <span class="username">{{ current_user.username }}</span>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">
+                        <span>Logout</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Content -->
+        <main class="dashboard-main">
+            <div class="container">
+                <!-- Dashboard Stats -->
+                <div class="stats-section">
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <h3>{{ bookings|length }}</h3>
+                            <p>Active Bookings</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <h3>
+                              {{ bookings|selectattr('slot.slot_date', 'ge', current_date)|list|length }}
+                            </h3>
+                            <p>Upcoming Sessions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2>Quick Actions</h2>
+                    <div class="action-cards">
+                        <a href="{{ url_for('teacher_slots') }}" class="action-card primary">
+                            <div class="action-icon">➕</div>
+                            <div class="action-content">
+                                <h3>Book New Slot</h3>
+                                <p>Schedule a new appointment</p>
                             </div>
-                        </td>
-                        <td>
-                            <form action="{{ url_for('delete_booking', booking_id=booking.id) }}" method="post" 
-                                  onsubmit="return confirm('Are you sure you want to cancel your booking for \n{{ booking.slot.slot_date }}: {{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}?');">
-                                <button type="submit">Cancel</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <p>You have no bookings</p>
-        {% endif %}
-        <div class="dashboard-links">
-            <a href="{{ url_for('teacher_slots') }}">Book a New Slot</a>
-        </div>
+                            <div class="action-arrow">→</div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Bookings Section -->
+                <div class="bookings-section">
+                    <div class="section-header">
+                        <h2>Your Bookings</h2>
+                        <div class="section-actions">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+                            <button class="filter-btn" data-filter="past">Past</button>
+                        </div>
+                    </div>
+
+                    {% if bookings %}
+                    <div class="table-container">
+                        <div class="table-responsive">
+                            <table class="booking-table sortable">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>Date</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th>
+                                            <div class="th-content">
+                                                <span>Time</span>
+                                                <svg class="sort-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                    <path d="M8 9l4-4 4 4M16 15l-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </div>
+                                        </th>
+                                        <th>Description</th>
+                                        <th class="sorttable_nosort">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr class="booking-row" data-date="{{ booking.slot.slot_date }}">
+                                        <td>
+                                            <div class="date-cell">
+                                                <span class="date-main">{{ booking.slot.slot_date.strftime('%B %d, %Y') }}</span>
+                                                <span class="date-day">{{ booking.slot.slot_date.strftime('%A') }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="time-cell">
+                                                <span class="time-range">{{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="description-cell">
+                                                <div class="scrollable-description">
+                                                    {{ booking.description }}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="action-cell">
+                                                {% set booking_date = booking.slot.slot_date %}
+                                                {% set today = current_date %}
+                                                {% if booking_date < today %}
+                                                    <div class="past-event-indicator">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                                            <polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2"/>
+                                                        </svg>
+                                                        <span>Time Passed</span>
+                                                    </div>
+                                                {% else %}
+                                                    <form action="{{ url_for('delete_booking', booking_id=booking.id) }}" method="post" 
+                                                          onsubmit="return confirm('Are you sure you want to cancel your booking for {{ booking.slot.slot_date }}: {{ booking.slot.slot_start_time }} - {{ booking.slot.slot_end_time }}?');" 
+                                                          class="cancel-form">
+                                                        <button type="submit" class="btn-cancel">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                                                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            </svg>
+                                                            Cancel
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <h3>No bookings yet</h3>
+                        <p>You haven't booked any slots yet. Get started by booking your first appointment.</p>
+                        <a href="{{ url_for('teacher_slots') }}" class="btn-primary">Book Your First Slot</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
     </div>
+
     <script src="{{ url_for('static', filename='sorttable.js') }}"></script>
+    <script>
+        // Filter functionality
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active state
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                const rows = document.querySelectorAll('.booking-row');
+                const today = new Date().toISOString().split('T')[0];
+                
+                rows.forEach(row => {
+                    const rowDate = row.dataset.date;
+                    let show = true;
+                    
+                    if (filter === 'upcoming') {
+                        show = rowDate >= today;
+                    } else if (filter === 'past') {
+                        show = rowDate < today;
+                    }
+                    
+                    row.style.display = show ? '' : 'none';
+                });
+            });
+        });
+
+        // Add staggered animation to table rows
+        document.querySelectorAll('.booking-row').forEach((row, index) => {
+            row.style.animationDelay = `${index * 0.1}s`;
+        });
+    </script>
 </body>
 </html>

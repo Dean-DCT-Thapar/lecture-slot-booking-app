@@ -1,27 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Booking Confirmation</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation - EduTube Slots</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='booking_confirmation.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>Booking Confirmation</h1>
-        <p> 
-            <strong>Slot Date:</strong> {{ slot.slot_date.strftime('%B %d, %Y') }} <br>
-            <strong>Slot Timings:</strong>  {{ slot.slot_start_time }} - {{ slot.slot_end_time }}
-        </p>
-        <div class="description-container">
-            <p>
-            Description: {{ description }}
-            </p>
-        </div>
-        <p>
-            Your booking has been confirmed.
-        </p>
-        <br>
-        <a href="{{ url_for('teacher_dashboard') }}">Back to Dashboard</a>
+    <div class="confirmation-wrapper">
+        <!-- Header -->
+        <header class="confirmation-header">
+            <div class="header-content">
+                <div class="page-title">
+                    <div class="title-icon">
+                        ✅
+                    </div>
+                    <div class="title-text">
+                        <h1>Booking Confirmed</h1>
+                        <p>Your slot has been successfully booked</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('teacher_dashboard') }}" class="dashboard-btn">
+                    🏠 Dashboard
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="confirmation-main">
+            <div class="container">
+                <!-- Success Card -->
+                <div class="success-card">
+                    <div class="success-animation">
+                        <div class="checkmark-circle">
+                            <div class="checkmark">✓</div>
+                        </div>
+                    </div>
+                    
+                    <div class="success-content">
+                        <h2>Booking Successful!</h2>
+                        <p class="success-message">Your teaching slot has been confirmed and added to your schedule.</p>
+                    </div>
+
+                    <!-- Booking Details -->
+                    <div class="booking-details">
+                        <h3>📅 Booking Details</h3>
+                        
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-icon">📅</div>
+                                <div class="detail-content">
+                                    <span class="detail-label">Date</span>
+                                    <span class="detail-value">{{ slot.slot_date.strftime('%B %d, %Y') }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon">⏰</div>
+                                <div class="detail-content">
+                                    <span class="detail-label">Time</span>
+                                    <span class="detail-value">{{ slot.slot_start_time }} - {{ slot.slot_end_time }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item full-width">
+                                <div class="detail-icon">📝</div>
+                                <div class="detail-content">
+                                    <span class="detail-label">Description</span>
+                                    <span class="detail-value">{{ description }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <a href="{{ url_for('teacher_dashboard') }}" class="primary-btn">
+                            🏠 Back to Dashboard
+                        </a>
+                        <a href="{{ url_for('teacher_slots') }}" class="secondary-btn">
+                            📅 Book Another Slot
+                        </a>
+                    </div>
+                </div>  
+            </div>
+        </main>
     </div>
+
+    <script>
+        // Add entrance animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const successCard = document.querySelector('.success-card');
+            const infoCards = document.querySelectorAll('.info-card');
+            
+            // Animate success card
+            setTimeout(() => {
+                successCard.style.opacity = '1';
+                successCard.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // Animate info cards with delay
+            infoCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 300 + (index * 200));
+            });
+            
+            // Animate checkmark
+            setTimeout(() => {
+                document.querySelector('.checkmark-circle').classList.add('animate');
+            }, 500);
+        });
+    </script>
 </body>
 </html>

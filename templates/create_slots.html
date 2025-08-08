@@ -3,35 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Slots</title>
+    <title>Slot Management</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='login.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='admin_dashboard.css') }}">
+    <style>
+        .slot-management-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0;
+        }
+        
+        .management-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .management-title {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--warning-600), var(--warning-800));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .management-subtitle {
+            color: var(--primary-600);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+        
+        .action-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .action-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid var(--primary-100);
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--success-500), var(--success-600));
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .action-card.delete-card::before {
+            background: linear-gradient(90deg, var(--accent-500), var(--accent-600));
+        }
+        
+        .action-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(34, 197, 94, 0.15);
+        }
+        
+        .action-card.delete-card:hover {
+            box-shadow: 0 20px 60px rgba(239, 68, 68, 0.15);
+        }
+        
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, var(--success-500), var(--success-600));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+        
+        .action-card.delete-card .action-icon {
+            background: linear-gradient(135deg, var(--accent-500), var(--accent-600));
+        }
+        
+        .action-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-800);
+            margin-bottom: 0.5rem;
+        }
+        
+        .action-description {
+            color: var(--primary-600);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .action-cards {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .slot-management-container {
+                margin: 1rem auto;
+            }
+            
+            .management-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
 </head>
-<style>
-    .container {
-    background: #fff;
-    max-width: 400px;
-    max-height: 400px;
-    margin: 100px auto;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    h1{
-        text-align: center;
-        margin-top: 60px;
-    }
-</style>
 <body>
     <div class="container">
-        <div class="navbar">
-            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
+        <div class="modern-navbar">
+            <div class="nav-links">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link logout">
+                    <span class="nav-icon">🚪</span>
+                    Logout
+                </a>
+            </div>
         </div>
-        <div class="form-container">
-            <h1>Create Slots</h1>
-            <a style="margin-bottom: 20px; margin-left: 40px;" href="{{url_for('create_bulk_slots')}}" class="button">Create Slots</a>
-            <a href="{{url_for('delete_slots')}}" class="button">Delete Slots</a>
+        
+        <div class="slot-management-container">
+            <div class="management-header">
+                <h1 class="management-title">Slot Management</h1>
+                <p class="management-subtitle">Create, organize, and manage your appointment slots</p>
+            </div>
+            
+            <div class="action-cards">
+                <a href="{{ url_for('create_bulk_slots') }}" class="action-card">
+                    <div class="action-icon">📅</div>
+                    <h3 class="action-title">Create Slots</h3>
+                </a>
+                
+                <a href="{{ url_for('delete_slots') }}" class="action-card delete-card">
+                    <div class="action-icon">🗑️</div>
+                    <h3 class="action-title">Delete Slots</h3>
+                </a>
+            </div>
         </div>
     </div>
 </body>

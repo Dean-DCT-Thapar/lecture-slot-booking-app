@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_migrate import Migrate
 from application.models import db, User, Slot, Booking
 from datetime import datetime, timedelta
 from google.oauth2 import service_account
@@ -8,9 +9,43 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 from datetime import date
+import logging
+from logging.handlers import RotatingFileHandler
+from config import config
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret'
+
+# Load configuration based on environment
+config_name = os.environ.get('FLASK_ENV', 'development')
+app.config.from_object(config[config_name])
+
+# Set up logging for production
+if not app.debug and not app.testing:
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    
+    file_handler = RotatingFileHandler('logs/slot_booking.log', maxBytes=10240000, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('Slot booking application startup')
+
+# Security headers
+@app.after_request
+def after_request(response):
+    # Security headers for production
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    if app.config.get('FORCE_HTTPS'):
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    return response
 
 @app.template_filter('dayfromdate')
 def dayfromdate(value):
@@ -24,8 +59,12 @@ def dayfromdate(value):
     return value
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + os.path.join(current_dir , "database/slots.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = app.config.get('SQLALCHEMY_DATABASE_URI') or "sqlite:///" + os.path.join(current_dir, "database/slots.db")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
+
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -36,13 +75,21 @@ def load_user(user_id):
         return session.get(User, int(user_id))
 
 def delete_old_slots_job():
-    with app.app_context():
-        today = datetime.today().date()
-        old_slots = Slot.query.filter(Slot.slot_date < today).all()
-        for slot in old_slots:
-            db.session.delete(slot)
-        db.session.commit()
-        print(f"Deleted {len(old_slots)} old slot(s) before {today}.")
+    """Background job to clean up old slots"""
+    try:
+        with app.app_context():
+            today = datetime.today().date()
+            old_slots = Slot.query.filter(Slot.slot_date < today).all()
+            deleted_count = len(old_slots)
+            
+            for slot in old_slots:
+                db.session.delete(slot)
+            db.session.commit()
+            
+            app.logger.info(f"Deleted {deleted_count} old slot(s) before {today}.")
+    except Exception as e:
+        app.logger.error(f"Error in delete_old_slots_job: {str(e)}")
+        db.session.rollback()
 
 # Set up the scheduler to run the deletion job every day at midnight.
 scheduler = BackgroundScheduler()
@@ -74,26 +121,99 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        email = request.form.get('email')
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        if username and password:
-            new_user = User(username=username, password=password, email = email, first_name = first_name, last_name = last_name, role="teacher")
+        # Input validation and sanitization
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        
+        # Validate required fields
+        if not all([username, password, email, first_name, last_name]):
+            message = 'All fields are required.'
+            return render_template('register.html', message=message)
+        
+        # Validate username format (alphanumeric and underscore only)
+        import re
+        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', username):
+            message = 'Username must be 3-20 characters long and contain only letters, numbers, and underscores.'
+            return render_template('register.html', message=message)
+        
+        # Validate password strength
+        if len(password) < 8:
+            message = 'Password must be at least 8 characters long.'
+            return render_template('register.html', message=message)
+        
+        # Validate email format
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            message = 'Please enter a valid email address.'
+            return render_template('register.html', message=message)
+        
+        # Validate name fields
+        if not re.match(r'^[a-zA-Z\s]{2,30}$', first_name):
+            message = 'First name must be 2-30 characters long and contain only letters and spaces.'
+            return render_template('register.html', message=message)
+        
+        if not re.match(r'^[a-zA-Z\s]{2,30}$', last_name):
+            message = 'Last name must be 2-30 characters long and contain only letters and spaces.'
+            return render_template('register.html', message=message)
+        
+        try:
             # Check if the username already exists
             existing_user = User.query.filter_by(username=username).first()
             if existing_user:
                 message = 'Username already exists. Please choose a different one.'
                 return render_template('register.html', message=message)
+            
+            # Check if the email already exists
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email:
+                message = 'Email address already exists. Please use a different email.'
+                return render_template('register.html', message=message)
+            
+            # Create new user with proper capitalization
+            new_user = User(
+                username=username, 
+                password=password, 
+                email=email, 
+                first_name=first_name.title(), 
+                last_name=last_name.title(), 
+                role="teacher"
+            )
+            
             # Add the new user to the database
             db.session.add(new_user)
             db.session.commit()
+            
+            app.logger.info(f'New user registered: {username} ({email})')
             flash('User registered successfully!')
             return redirect(url_for('login'))
-        else:
-            flash('Please fill in all fields.')
+            
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Registration error: {str(e)}')
+            message = 'An error occurred during registration. Please try again.'
+            return render_template('register.html', message=message)
+    
     return render_template('register.html')
+
+@app.route('/check_availability', methods=['POST'])
+def check_availability():
+    data = request.get_json()
+    field = data.get('field')
+    value = data.get('value')
+    
+    if not field or not value:
+        return jsonify({'available': True})
+    
+    if field == 'username':
+        existing = User.query.filter_by(username=value).first()
+        return jsonify({'available': existing is None})
+    elif field == 'email':
+        existing = User.query.filter_by(email=value).first()
+        return jsonify({'available': existing is None})
+    
+    return jsonify({'available': True})
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -147,7 +267,7 @@ def teacher_dashboard():
     if current_user.role != "teacher":
         return redirect(url_for('login'))
     bookings = Booking.query.filter_by(user_id=current_user.id).all()
-    return render_template('teacher_dashboard.html', bookings=bookings)
+    return render_template('teacher_dashboard.html', bookings=bookings,current_user=current_user, current_date=date.today())
 
 @app.route('/admin/slots', methods=['GET'])
 @login_required
@@ -167,10 +287,10 @@ def admin_slots():
         search_date = None
 
     if search_date:
-        slots = Slot.query.filter_by(slot_date=search_date).all()
+        slots = Slot.query.filter(Slot.slot_date == search_date, Slot.available == True, ~Slot.bookings.any()).all()
     else:
-        slots = Slot.query.all()
-        
+        slots = Slot.query.filter(Slot.available == True, ~Slot.bookings.any()).all()
+
     return render_template('admin_slots.html', slots=slots, search_date=search_date_str)
 
 @app.route('/admin/create_slot', methods=['GET'])
@@ -203,7 +323,17 @@ def admin_dashboard():
     if current_user.role != 'admin':
         return redirect(url_for('login'))
     bookings = Booking.query.all()
-    return render_template('admin_dashboard.html', bookings=bookings)
+    return render_template('admin_dashboard.html', bookings=bookings, current_user=current_user, current_date=date.today())
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    if current_user.role != 'admin':
+        flash('Permission denied!')
+        return redirect(url_for('teacher_dashboard'))
+    
+    users = User.query.all()
+    return render_template('admin_users.html', users=users, current_user=current_user, current_date=date.today())
 
 @app.route('/book/<int:slot_id>', methods=['POST'])
 @login_required
@@ -283,9 +413,9 @@ def delete_slots():
         search_date = None
 
     if search_date:
-        slots = Slot.query.filter_by(slot_date=search_date).all()
+        slots = Slot.query.filter(Slot.slot_date == search_date, Slot.available == True, ~Slot.bookings.any()).all()
     else:
-        slots = Slot.query.all()
+        slots = Slot.query.filter(Slot.available == True, ~Slot.bookings.any()).all()
         
     return render_template('delete_slots.html', slots=slots, search_date=search_date_str)
 
@@ -482,5 +612,46 @@ def delete_slot(slot_id):
     db.session.commit()
     return jsonify({'success': True})
 
+@app.route('/admin/delete_slots_bulk', methods=['POST'])
+@login_required
+def delete_slots_bulk():
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'error': 'Permission denied!'}), 403
+    
+    slot_ids = request.json.get('slot_ids', [])
+    if not slot_ids:
+        return jsonify({'success': False, 'error': 'No slots selected!'}), 400
+    
+    try:
+        deleted_count = 0
+        for slot_id in slot_ids:
+            slot = Slot.query.get(slot_id)
+            if slot:
+                db.session.delete(slot)
+                deleted_count += 1
+        
+        db.session.commit()
+        return jsonify({'success': True, 'deleted_count': deleted_count})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Error handlers for production
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    app.logger.error(f'Server Error: {error}')
+    return render_template('errors/500.html'), 500
+
+@app.errorhandler(403)
+def forbidden_error(error):
+    return render_template('errors/403.html'), 403
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Only run in debug mode for development
+    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+    app.run(debug=debug_mode, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
