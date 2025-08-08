@@ -576,7 +576,7 @@ def add_event_to_calendar(slot,metadata):
     SCOPES = ['https://www.googleapis.com/auth/calendar']
     print("Loading service account credentials...")
     credentials = service_account.Credentials.from_service_account_file(
-        'credentials.json', scopes=SCOPES)
+        'google_credentials.json', scopes=SCOPES)
     print("Credentials loaded successfully. Building the Google Calendar service...")
     service = build('calendar', 'v3', credentials=credentials)
 
@@ -606,7 +606,7 @@ def add_event_to_calendar(slot,metadata):
 def remove_event_from_calendar(event_id):
     SCOPES = ['https://www.googleapis.com/auth/calendar']
     credentials = service_account.Credentials.from_service_account_file(
-        'credentials.json', scopes=SCOPES)
+        'google_credentials.json', scopes=SCOPES)
     service = build('calendar', 'v3', credentials=credentials)
 
     try:
