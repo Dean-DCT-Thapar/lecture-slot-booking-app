@@ -59,8 +59,6 @@ def dayfromdate(value):
     return value
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = app.config.get('SQLALCHEMY_DATABASE_URI') or "sqlite:///" + os.path.join(current_dir, "database/slots.db")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 # Initialize Flask-Migrate
@@ -93,26 +91,42 @@ def delete_old_slots_job():
 
 # Set up the scheduler to run the deletion job every day at midnight.
 scheduler = BackgroundScheduler()
-if not scheduler.running:
-    with app.app_context():
-        today = datetime.today().date()
-        old_slots_exist = Slot.query.filter(Slot.slot_date < today).count() > 0
-        if old_slots_exist:
-            scheduler.add_job(func=delete_old_slots_job, trigger="cron", hour=0, minute=0)
-            scheduler.start()
-# and avoids potential issues caused by stale data.
-scheduler = BackgroundScheduler()
-scheduler.add_job(func=delete_old_slots_job, trigger="cron", hour=0, minute=0)
-scheduler.start()
 
-atexit.register(lambda: safe_shutdown_scheduler())
+def initialize_scheduler():
+    """Initialize the scheduler with database check"""
+    # Skip scheduler initialization if requested
+    if os.environ.get('SKIP_SCHEDULER') == 'true':
+        app.logger.info("Skipping scheduler initialization")
+        return
+        
+    try:
+        if not scheduler.running:
+            with app.app_context():
+                # Only check if database is accessible
+                try:
+                    today = datetime.today().date()
+                    old_slots_exist = Slot.query.filter(Slot.slot_date < today).count() > 0
+                    if old_slots_exist:
+                        app.logger.info("Found old slots, scheduling cleanup job")
+                except Exception as db_error:
+                    app.logger.warning(f"Could not check for old slots, will schedule cleanup anyway: {db_error}")
+                
+                scheduler.add_job(func=delete_old_slots_job, trigger="cron", hour=0, minute=0, id="cleanup_job")
+                scheduler.start()
+                app.logger.info("Background scheduler started")
+    except Exception as e:
+        app.logger.error(f"Failed to initialize scheduler: {e}")
 
 def safe_shutdown_scheduler():
+    """Safely shutdown the scheduler"""
     try:
-        scheduler.shutdown()
+        if scheduler.running:
+            scheduler.shutdown()
+            app.logger.info("Scheduler shutdown completed")
     except Exception as e:
-        print(f"Error during scheduler shutdown: {e}")
-atexit.register(lambda: scheduler.shutdown())
+        app.logger.error(f"Error during scheduler shutdown: {e}")
+
+atexit.register(safe_shutdown_scheduler)
 
 @app.route('/')
 def index():
@@ -652,6 +666,9 @@ def forbidden_error(error):
     return render_template('errors/403.html'), 403
 
 if __name__ == '__main__':
+    # Initialize scheduler when running directly
+    initialize_scheduler()
+    
     # Only run in debug mode for development
     debug_mode = os.environ.get('FLASK_ENV') == 'development'
     app.run(debug=debug_mode, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

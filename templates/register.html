@@ -56,6 +56,12 @@
                             <label for="password">Password</label>
                             <input type="password" id="password" name="password" placeholder="Create a secure password" required>
                         </div>
+                        <!-- Add confirm password field below password input -->
+                        <div class="input-wrapper">
+                            <label for="confirm_password">Confirm Password</label>
+                            <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter your password" required>
+                            <div class="validation-message" id="confirm-password-validation"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -163,13 +169,40 @@
             updateSubmitButton();
         }
 
+        // Confirm password validation
+        function validateConfirmPassword() {
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const messageElement = document.getElementById('confirm-password-validation');
+            const inputElement = document.getElementById('confirm_password');
+            if (confirm.length === 0) {
+                messageElement.textContent = '';
+                messageElement.className = 'validation-message';
+                inputElement.classList.remove('success', 'error');
+                return false;
+            }
+            if (password === confirm) {
+                messageElement.textContent = '✓ Passwords match';
+                messageElement.className = 'validation-message success';
+                inputElement.classList.remove('error');
+                inputElement.classList.add('success');
+                return true;
+            } else {
+                messageElement.textContent = '✗ Passwords do not match';
+                messageElement.className = 'validation-message error';
+                inputElement.classList.remove('success');
+                inputElement.classList.add('error');
+                return false;
+            }
+        }
+
         // Update submit button state
         function updateSubmitButton() {
             const submitButton = document.querySelector('.btn-primary');
             const usernameHasValue = document.getElementById('username').value.trim() !== '';
             const emailHasValue = document.getElementById('email').value.trim() !== '';
-            
-            if (usernameHasValue && emailHasValue && validationState.username && validationState.email) {
+            const passwordsMatch = validateConfirmPassword();
+            if (usernameHasValue && emailHasValue && validationState.username && validationState.email && passwordsMatch) {
                 submitButton.disabled = false;
                 submitButton.classList.remove('disabled');
             } else {
@@ -188,6 +221,12 @@
             if (!validationState.username || !validationState.email) {
                 event.preventDefault();
                 alert('Please wait for validation to complete before submitting.');
+                return;
+            }
+
+            if (!validateConfirmPassword()) {
+                event.preventDefault();
+                alert('Passwords do not match.');
                 return;
             }
 
@@ -227,6 +266,18 @@ Are you sure you want to register with these details?`;
             } else {
                 clearValidationMessage('email');
             }
+        });
+
+        // Confirm password input event
+        document.getElementById('confirm_password').addEventListener('input', function() {
+            validateConfirmPassword();
+            updateSubmitButton();
+        });
+
+        // Also validate on password input change
+        document.getElementById('password').addEventListener('input', function() {
+            validateConfirmPassword();
+            updateSubmitButton();
         });
 
         // Add input animation effects

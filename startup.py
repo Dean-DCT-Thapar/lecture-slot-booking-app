@@ -23,16 +23,48 @@ def setup_logging():
         ]
     )
 
+def ensure_directories():
+    """Ensure all required directories exist"""
+    directories = ['logs', 'database', 'instance']
+    
+    for directory in directories:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            logging.info(f"Created directory: {directory}")
+
 def create_database():
     """Create database tables if they don't exist"""
     try:
+        # Ensure database directory exists
+        from config import Config
+        
+        # Extract database path from URI
+        db_uri = Config.SQLALCHEMY_DATABASE_URI
+        if db_uri.startswith('sqlite:///'):
+            # Remove sqlite:/// prefix and get the path
+            db_path = db_uri[10:]  # Remove 'sqlite:///'
+            db_dir = os.path.dirname(db_path)
+            
+            if db_dir and not os.path.exists(db_dir):
+                os.makedirs(db_dir)
+                logging.info(f"Created database directory: {db_dir}")
+        
         with app.app_context():
-            # Try to upgrade database with migrations first
-            try:
-                upgrade()
-                logging.info("Database migrated successfully")
-            except Exception as migrate_error:
-                logging.warning(f"Migration failed, creating tables directly: {migrate_error}")
+            # Check if migrations directory exists
+            migrations_dir = os.path.join(os.path.dirname(__file__), 'migrations')
+            
+            if os.path.exists(migrations_dir):
+                # Try to upgrade database with migrations
+                try:
+                    upgrade()
+                    logging.info("Database migrated successfully")
+                except Exception as migrate_error:
+                    logging.warning(f"Migration failed, creating tables directly: {migrate_error}")
+                    db.create_all()
+                    logging.info("Database tables created successfully")
+            else:
+                # No migrations directory, create tables directly
+                logging.info("No migrations found, creating tables directly")
                 db.create_all()
                 logging.info("Database tables created successfully")
             
@@ -88,6 +120,9 @@ def main():
     """Main startup function"""
     setup_logging()
     logging.info("Starting EduTube Slot Booking Application setup...")
+    
+    # Ensure all directories exist
+    ensure_directories()
     
     # Check environment
     check_environment()

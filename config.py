@@ -7,7 +7,17 @@ load_dotenv()
 class Config:
     """Base configuration class"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///database/slots.db'
+    
+    # Construct database URI with proper path
+    if os.environ.get('DATABASE_URL'):
+        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    else:
+        # Use absolute path for SQLite database
+        basedir = os.path.abspath(os.path.dirname(__file__))
+        db_path = os.path.join(basedir, 'database', 'slots.db')
+        # Ensure proper URI format for Windows
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path.replace(os.sep, "/")}'
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Application settings
